@@ -4,22 +4,12 @@ const FONT="'Pretendard',-apple-system,'Noto Sans KR',sans-serif";
 const SB_URL="https://jzahuisvtglzzkmgjcnr.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp6YWh1aXN2dGdsenprbWdqY25yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MzE4MDgsImV4cCI6MjA5MDUwNzgwOH0.WWpeegaxxxJR6lROjBJLQDEofsRoKn9YxBgaoeqndJM";
 const HD={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"};
-
 async function dbLoad(k){try{const r=await fetch(SB_URL+"/rest/v1/couples?couple_key=eq."+encodeURIComponent(k)+"&select=data",{headers:HD});const d=await r.json();return d?.[0]?.data||null;}catch{return null;}}
 async function dbSave(k,d){try{await fetch(SB_URL+"/rest/v1/couples",{method:"POST",headers:{...HD,"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({couple_key:k,data:d,updated_at:new Date().toISOString()})});}catch(e){console.error(e);}}
 function dlCSV(fn,hd,rows){const B="\uFEFF",esc=c=>'"'+String(c==null?"":c).replace(/"/g,'""')+'"';const csv=B+[hd.map(esc).join(","),...rows.map(r=>r.map(esc).join(","))].join("\n");const b=new Blob([csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fn+".csv";a.click();}
 
-/* ── Color palette (Pantone 366/297/278/270) ── */
-const P={
-  green:"#B5D580",greenDk:"#7BA23A",greenLt:"#E8F2D6",greenBg:"#F4F9EC",
-  blue:"#6EC8E4",blueDk:"#3A8EB0",blueLt:"#D6EEF6",blueBg:"#EDF7FB",
-  peri:"#92ADD8",periDk:"#5B7EAE",periLt:"#DDE6F2",periBg:"#EEF2F8",
-  lav:"#B0A0CC",lavDk:"#7B6B9E",lavLt:"#E4DFF0",lavBg:"#F2F0F7",
-  text:"#3A3A50",textSub:"#7A7A8E",textMuted:"#A8A8BC",
-  bg:"#F6F9F2",cardBg:"#FFFFFF",border:"#E2EAD8",
-};
+const P={green:"#B5D580",greenDk:"#7BA23A",greenLt:"#E8F2D6",greenBg:"#F4F9EC",blue:"#6EC8E4",blueDk:"#3A8EB0",blueLt:"#D6EEF6",blueBg:"#EDF7FB",peri:"#92ADD8",periDk:"#5B7EAE",periLt:"#DDE6F2",periBg:"#EEF2F8",lav:"#B0A0CC",lavDk:"#7B6B9E",lavLt:"#E4DFF0",lavBg:"#F2F0F7",text:"#3A3A50",textSub:"#7A7A8E",textMuted:"#A8A8BC",bg:"#F6F9F2",border:"#E2EAD8"};
 
-/* ── Flowers matching palette ── */
 function Fl1({s}){return<svg viewBox="0 0 120 120" style={{position:"absolute",opacity:0.15,pointerEvents:"none",...s}} xmlns="http://www.w3.org/2000/svg"><defs><filter id="a"><feGaussianBlur stdDeviation="2.5"/></filter></defs><g filter="url(#a)">{[0,72,144,216,288].map((r,i)=><ellipse key={i} cx="60" cy="35" rx="22" ry="28" fill={i%2?P.blue:P.peri} transform={`rotate(${r} 60 60)`}/>)}<circle cx="60" cy="60" r="12" fill={P.lav}/></g></svg>;}
 function Fl2({s}){return<svg viewBox="0 0 100 60" style={{position:"absolute",opacity:0.13,pointerEvents:"none",...s}} xmlns="http://www.w3.org/2000/svg"><defs><filter id="b"><feGaussianBlur stdDeviation="1.5"/></filter></defs><g filter="url(#b)"><path d="M50 55Q30 30 15 40Q0 50 20 55Z" fill={P.green}/><path d="M50 55Q70 30 85 40Q100 50 80 55Z" fill={P.greenLt}/><path d="M50 55Q40 15 50 5Q60 15 50 55Z" fill={P.greenDk}/></g></svg>;}
 function Fl3({s}){return<svg viewBox="0 0 90 90" style={{position:"absolute",opacity:0.12,pointerEvents:"none",...s}} xmlns="http://www.w3.org/2000/svg"><defs><filter id="c"><feGaussianBlur stdDeviation="2"/></filter></defs><g filter="url(#c)">{[0,60,120,180,240,300].map((r,i)=><ellipse key={i} cx="45" cy="25" rx="16" ry="22" fill={i%2?P.lav:P.peri} transform={`rotate(${r} 45 45)`}/>)}<circle cx="45" cy="45" r="8" fill={P.blueLt}/></g></svg>;}
@@ -34,17 +24,8 @@ const CL=[
   {period:"2027-01/2027-03",label:"본식 가봉 & 마무리",emoji:"✨",items:[{id:"b01",text:"본식 드레스 셀렉",cat:"dress",note:"4벌 중 1벌"},{id:"b02",text:"원본사진 수령·셀렉",cat:"photo"},{id:"b03",text:"종이 청첩장",cat:"etc"},{id:"b04",text:"수정본 수령",cat:"photo"},{id:"b05",text:"액자 수령",cat:"photo"},{id:"b06",text:"혼주 확인/예단",cat:"family"},{id:"b07",text:"식순 준비",cat:"ceremony"},{id:"b08",text:"부케 셀렉",cat:"flower",note:"부케+부토니아+코사지6"},{id:"b09",text:"식순 체크",cat:"ceremony"},{id:"b10",text:"MR·연주",cat:"ceremony"},{id:"b11",text:"식전영상",cat:"ceremony"},{id:"b12",text:"식권 도장",cat:"ceremony"},{id:"b13",text:"포토테이블",cat:"ceremony"}]},
   {period:"2027-04/2027-05",label:"웨딩데이",emoji:"💍",items:[{id:"w01",text:"웨딩데이 ♥",cat:"ceremony"}]},
 ];
-const CAT={venue:{bg:"#FFF8E1",fg:"#D4A017",n:"웨딩홀",ic:"🏛️"},planner:{bg:P.lavLt,fg:P.lavDk,n:"플래너",ic:"📋"},dress:{bg:"#FCE4EC",fg:"#C62860",n:"드레스",ic:"👗"},makeup:{bg:"#FDF2F8",fg:"#B0408A",n:"메이크업",ic:"💄"},photo:{bg:P.greenLt,fg:P.greenDk,n:"촬영",ic:"📷"},shopping:{bg:"#FFF8E1",fg:"#C8960A",n:"혼수",ic:"🛍️"},honeymoon:{bg:P.blueLt,fg:P.blueDk,n:"신혼여행",ic:"✈️"},ceremony:{bg:P.periLt,fg:P.periDk,n:"예식",ic:"💒"},flower:{bg:"#FCE4EC",fg:"#C62850",n:"부케·꽃",ic:"💐"},family:{bg:P.greenLt,fg:"#5D6E3A",n:"혼주",ic:"👨‍👩‍👧"},etc:{bg:"#F0F0F0",fg:"#707080",n:"기타",ic:"📌"}};
-const TIPS={
-  "2026-02/2026-04":["💡 웨딩홀은 견적서를 서면으로 꼭 받아오세요. 숨은 비용(주차, 식권 추가 등)도 확인!","💡 스드메는 3곳 이상 비교하면 가성비 파악에 좋아요. 가격 상승 추세라 빨리 계약이 유리해요","💡 예물 반지는 금값이 오르는 추세이니 빨리 결정할수록 유리해요","💡 상견례 전 양가와 날짜·예산을 미리 조율해두면 당일 분위기가 훨씬 편해요","💡 예산표를 반드시 만들고 항목별 상한선 + 20% 여유분을 두세요"],
-  "2026-04/2026-05":["💡 드레스 투어 시 사진이 안 되는 곳이 많아요. 메모를 준비하세요","💡 드레스 지정이 투어보다 20~40만원 저렴할 수 있어요","💡 한복 맞춤은 최소 2~3개월, 대여는 1개월 전이면 충분해요","💡 평일에 방문하면 주말보다 더 다양한 드레스를 볼 수 있어요"],
-  "2026-06/2026-07":["💡 촬영가봉 때 악세서리(귀걸이, 목걸이, 티아라)도 함께 매칭해보세요","💡 신랑 예복 맞춤은 촬영 3개월 전까지! 2~3회 가봉이 필요해요","💡 촬영 부케는 생화 vs 조화 장단점을 비교해보세요","💡 촬영 컨셉과 소품은 커플이 함께 정하면 더 특별해요"],
-  "2026-09/2026-10":["💡 촬영 전날 충분히 수면하고, 붓지 않게 야식·짠 음식은 피하세요","💡 촬영 당일 누드톤 속옷 & 스트랩리스 브라 준비하세요","💡 헤어변형 선생님을 부르면 드레스마다 헤어를 바꿀 수 있어요","💡 촬영 후 2~3주 뒤 사진 셀렉, 3~4개월 뒤 최종 앨범 수령이에요"],
-  "2026-11/2026-12":["💡 앨범 셀렉은 2~3시간 소요. 페이지 추가 3.3만원/장이에요","💡 모바일 청첩장은 결혼 6~8주 전, 종이 청첩장은 2달 전부터 발송하세요","💡 포토테이블용 사진은 셀렉 때 업체에 빠른 수령을 요청하세요"],
-  "2026-11/2027-01":["💡 신혼집 입주 시기를 결혼식과 맞춰 계획하면 이사 스트레스가 줄어요","💡 폐백은 요즘 생략 추세이지만 양가 의견을 꼭 먼저 확인하세요","💡 축가는 최소 2개월 전에 미리 부탁하세요","💡 하객 명단은 최근 1년 내 연락했던 분들 기준으로 정리하면 효율적이에요"],
-  "2027-01/2027-03":["💡 본식 가봉은 플래너 동행이 중요! 그날 바로 결정해야 해요","💡 식순표는 사회자와 미리 공유, MR 음원은 USB로 준비하세요","💡 포토테이블 사진은 어린 시절~연애 시절 다양하게 준비하세요","💡 결혼식 전 피부 자극 줄이고 컨디션 유지에 집중! 새 시술은 피하세요"],
-  "2027-04/2027-05":["💍 결혼 전날 서로에게 편지를 써서 당일 교환해보세요","💍 비상키트: 바늘, 양면테이프, 진통제, 여분 스타킹, 밴드, 물티슈","💍 축의금 담당은 신뢰할 수 있는 경험자에게. 손바닥 보호 장갑도 준비!"],
-};
+const CAT={venue:{bg:"#FFF8E1",fg:"#D4A017",n:"웨딩홀",ic:"🏛️"},planner:{bg:P.lavLt,fg:P.lavDk,n:"플래너",ic:"📋"},dress:{bg:"#FCE4EC",fg:"#C62860",n:"드레스",ic:"👗"},makeup:{bg:"#FDF2F8",fg:"#B0408A",n:"메이크업",ic:"💄"},photo:{bg:P.greenLt,fg:P.greenDk,n:"촬영",ic:"📷"},shopping:{bg:"#FFF8E1",fg:"#C8960A",n:"혼수",ic:"🛍️"},honeymoon:{bg:P.blueLt,fg:P.blueDk,n:"신혼여행",ic:"✈️"},ceremony:{bg:P.periLt,fg:P.periDk,n:"예식",ic:"💒"},flower:{bg:"#FCE4EC",fg:"#C62850",n:"부케·꽃",ic:"💐"},family:{bg:P.greenLt,fg:"#5D6E3A",n:"혼주",ic:"👨‍👩‍👧"},etc:{bg:"#F0F0F0",fg:"#707080",n:"기타",ic:"📌"},custom:{bg:P.blueLt,fg:P.blueDk,n:"직접추가",ic:"✏️"}};
+const TIPS={"2026-02/2026-04":["💡 웨딩홀은 견적서를 서면으로 꼭 받아오세요. 숨은 비용도 확인!","💡 스드메 3곳 이상 비교하면 가성비 파악에 좋아요","💡 예물 반지는 금값이 오르니 빨리 결정이 유리해요","💡 상견례 전 양가와 날짜·예산을 미리 조율해두세요","💡 예산표를 만들고 항목별 상한선 + 20% 여유분을 두세요"],"2026-04/2026-05":["💡 드레스 투어 시 사진이 안 되는 곳이 많으니 메모 준비","💡 드레스 지정이 투어보다 20~40만원 저렴할 수 있어요","💡 한복 맞춤 최소 2~3개월, 대여는 1개월 전 OK","💡 평일 방문하면 더 다양한 드레스를 볼 수 있어요"],"2026-06/2026-07":["💡 촬영가봉 때 악세서리도 함께 매칭해보세요","💡 신랑 예복 맞춤은 촬영 3개월 전까지!","💡 촬영 부케 생화 vs 조화 장단점 비교해보세요"],"2026-09/2026-10":["💡 촬영 전날 충분히 수면, 야식·짠 음식 피하세요","💡 촬영 당일 누드톤 속옷 준비하세요","💡 헤어변형 선생님 부르면 드레스마다 헤어 변경 가능"],"2026-11/2026-12":["💡 앨범 페이지 추가 3.3만원/장이에요","💡 모바일 청첩장은 결혼 6~8주 전 발송"],"2026-11/2027-01":["💡 신혼집 입주와 결혼식 일정을 맞춰 계획하세요","💡 폐백은 요즘 생략 추세, 양가 의견 먼저 확인","💡 축가는 최소 2개월 전에 미리 부탁하세요"],"2027-01/2027-03":["💡 본식 가봉은 플래너 동행이 중요!","💡 식순표 사회자와 공유, MR 음원 USB 준비","💡 포토테이블 사진은 어린 시절~연애 시절 다양하게"],"2027-04/2027-05":["💍 결혼 전날 편지를 교환해보세요","💍 비상키트: 바늘, 테이프, 진통제, 여분 스타킹"]};
 
 function fresh(){return{groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",email:"",checklist:JSON.parse(JSON.stringify(CL)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],vendors:[],keyDates:[]};}
 function getDday(d){if(!d)return null;const t=new Date();t.setHours(0,0,0,0);const w=new Date(d);w.setHours(0,0,0,0);return Math.ceil((w-t)/864e5);}
@@ -57,9 +38,9 @@ function dln(p){const e=p.split("/")[1].split("-").map(Number),d=new Date(e[0],e
 function cTips(cl){const c=cl.find(p=>pSt(p.period)==="current")||cl.find(p=>pSt(p.period)==="upcoming");if(!c)return["🎉 모든 준비 완료!"];return TIPS[c.period]||["💡 차근차근 준비해보세요!"];}
 function Bg({cat}){const c=CAT[cat]||CAT.etc;return<span style={{padding:"4px 10px",borderRadius:8,fontSize:12,fontWeight:600,background:c.bg,color:c.fg,whiteSpace:"nowrap"}}>{c.ic} {c.n}</span>;}
 
-function Modal({title,open,onClose,children}){if(!open)return null;return<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.3)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(4px)"}} onClick={onClose}><div style={{background:"#fff",borderRadius:24,padding:"36px 32px",maxWidth:520,width:"100%",boxShadow:"0 24px 64px rgba(60,80,120,0.12)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}><h3 style={{fontSize:20,fontWeight:700,color:P.text,margin:0}}>{title}</h3><button onClick={onClose} style={{background:P.periLt,border:"none",width:36,height:36,borderRadius:10,fontSize:18,color:P.periDk,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{children}</div></div>;}
-const MI={padding:"14px 16px",border:"1.5px solid "+P.border,borderRadius:12,fontSize:15,outline:"none",fontFamily:FONT,color:P.text,background:"#FAFCF8",boxSizing:"border-box",width:"100%"};
-function DlB({onClick}){return<button onClick={onClick} style={{padding:"8px 16px",background:P.periLt,border:"none",borderRadius:10,fontSize:13,fontWeight:600,color:P.periDk,cursor:"pointer",fontFamily:FONT}}>📥 엑셀</button>;}
+function Modal({title,open,onClose,children}){if(!open)return null;return<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.3)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}} onClick={onClose}><div className="modal-inner" style={{background:"#fff",borderRadius:24,padding:"32px 28px",maxWidth:520,width:"100%",boxShadow:"0 24px 64px rgba(60,80,120,0.12)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}><h3 style={{fontSize:20,fontWeight:700,color:P.text,margin:0}}>{title}</h3><button onClick={onClose} style={{background:P.periLt,border:"none",width:40,height:40,borderRadius:12,fontSize:18,color:P.periDk,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{children}</div></div>;}
+const MI={padding:"14px 16px",border:"1.5px solid "+P.border,borderRadius:12,fontSize:16,outline:"none",fontFamily:FONT,color:P.text,background:"#FAFCF8",boxSizing:"border-box",width:"100%"};
+function DlB({onClick}){return<button onClick={onClick} style={{padding:"10px 16px",background:P.periLt,border:"none",borderRadius:10,fontSize:13,fontWeight:600,color:P.periDk,cursor:"pointer",fontFamily:FONT}}>📥 엑셀</button>;}
 function Toast({msg,show}){return<div style={{position:"fixed",bottom:show?30:-60,left:"50%",transform:"translateX(-50%)",background:P.periDk,color:"#fff",padding:"12px 28px",borderRadius:14,fontSize:14,fontWeight:600,fontFamily:FONT,boxShadow:"0 8px 24px rgba(91,126,174,0.2)",transition:"bottom 0.3s",zIndex:200}}>{msg}</div>;}
 
 /* ═══ LOGIN ═══ */
@@ -67,31 +48,27 @@ function LoginScreen({onLogin}){
   const[key,setKey]=useState("");const[isNew,setIsNew]=useState(false);const[err,setErr]=useState("");const[busy,setBusy]=useState(false);
   const tryLogin=async()=>{if(!key.trim()){setErr("키를 입력해주세요");return;}setBusy(true);const d=await dbLoad(key.trim());setBusy(false);if(d){onLogin(key.trim(),d);return;}setIsNew(true);setErr("");};
   const createNew=async()=>{setBusy(true);const d={...fresh(),isSetup:false};await dbSave(key.trim(),d);setBusy(false);onLogin(key.trim(),d);};
-  return<div style={S.wrap}><Fl1 s={{width:150,top:-30,left:-30}}/><Fl3 s={{width:120,top:10,right:-15}}/><Fl2 s={{width:130,bottom:20,left:10}}/><Fl1 s={{width:100,bottom:-10,right:10}}/>
+  return<div style={S.wrap}><Fl1 s={{width:150,top:-30,left:-30}}/><Fl3 s={{width:120,top:10,right:-15}}/><Fl2 s={{width:130,bottom:20,left:10}}/>
     <div style={S.lc}><div style={{fontSize:52,marginBottom:10}}>💍</div><h1 style={{fontSize:28,fontWeight:700,color:P.periDk,margin:"0 0 6px"}}>Wedding Planner</h1><p style={{fontSize:15,color:P.textSub,margin:"0 0 32px",lineHeight:1.8}}>커플 키를 입력하면<br/>우리만의 결혼 준비 공간이 열려요</p>
       <div style={{textAlign:"left",maxWidth:340,margin:"0 auto"}}><label style={S.lbl}>커플 키</label><input style={{...MI,fontSize:17,padding:"16px 18px"}} placeholder="예: jm-sk-2027" value={key} onChange={e=>{setKey(e.target.value);setIsNew(false);setErr("");}} onKeyDown={e=>{if(e.key==="Enter")tryLogin();}}/>
         <p style={{fontSize:13,color:P.textMuted,margin:"10px 0 0",lineHeight:1.7}}>처음이면 원하는 키를 만드세요.<br/>어디서든 같은 키면 기록이 있어요.</p>
         {err&&<p style={{color:"#D32F2F",fontSize:14,margin:"8px 0 0"}}>{err}</p>}
         {isNew?<div style={{marginTop:24,padding:24,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,borderRadius:18,textAlign:"center"}}><p style={{fontSize:16,color:P.text,margin:"0 0 16px"}}>✨ <b>"{key}"</b>는 새로운 키예요!</p><button style={{...S.btn,width:"100%"}} onClick={createNew} disabled={busy}>{busy?"생성 중...":"새로 시작하기 🌷"}</button></div>:<button style={{...S.btn,width:"100%",marginTop:24}} onClick={tryLogin} disabled={busy}>{busy?"확인 중...":"들어가기 →"}</button>}
-      </div>
-    </div>
-  </div>;
+      </div></div></div>;
 }
 
 /* ═══ SETUP ═══ */
 function SetupScreen({data,setData}){
   const[f,setF]=useState({groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",email:""});
   const go=()=>{if(!f.groomName||!f.brideName||!f.weddingDate)return;setData({...data,...f,isSetup:true});};const ok=f.groomName&&f.brideName&&f.weddingDate;
-  return<div style={S.wrap}><Fl1 s={{width:130,top:-20,left:-20}}/><Fl3 s={{width:95,top:15,right:5}}/><Fl2 s={{width:110,bottom:30,left:15}}/>
+  return<div style={S.wrap}><Fl1 s={{width:130,top:-20,left:-20}}/><Fl3 s={{width:95,top:15,right:5}}/>
     <div style={{...S.lc,maxWidth:480}}><div style={{fontSize:48,marginBottom:8}}>💐</div><h1 style={{fontSize:26,fontWeight:700,color:P.periDk,margin:"0 0 6px"}}>두 사람의 정보</h1><p style={{fontSize:15,color:P.textSub,margin:"0 0 28px"}}>이름과 예정일을 입력해주세요</p>
       <div style={{display:"flex",flexDirection:"column",gap:18,textAlign:"left"}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}><div style={{flex:1,minWidth:0}}><label style={S.lbl}>신랑 🌿</label><input style={MI} value={f.groomName} onChange={e=>setF({...f,groomName:e.target.value})} placeholder="이름"/></div><div style={{fontSize:24,color:P.peri,flexShrink:0,paddingTop:22}}>♥</div><div style={{flex:1,minWidth:0}}><label style={S.lbl}>신부 🌻</label><input style={MI} value={f.brideName} onChange={e=>setF({...f,brideName:e.target.value})} placeholder="이름"/></div></div>
         <div style={{display:"flex",gap:12}}><div style={{flex:1,minWidth:0}}><label style={S.lbl}>결혼 예정일</label><input type="date" style={MI} value={f.weddingDate} onChange={e=>setF({...f,weddingDate:e.target.value})}/></div><div style={{flex:1,minWidth:0}}><label style={S.lbl}>예식 시간</label><input type="time" style={MI} value={f.weddingTime} onChange={e=>setF({...f,weddingTime:e.target.value})}/></div></div>
         <div><label style={S.lbl}>이메일 (선택)</label><input type="email" style={MI} placeholder="example@gmail.com" value={f.email} onChange={e=>setF({...f,email:e.target.value})}/></div>
         <button style={{...S.btn,width:"100%",opacity:ok?1:0.4}} onClick={go} disabled={!ok}>시작하기 🌷</button>
-      </div>
-    </div>
-  </div>;
+      </div></div></div>;
 }
 
 /* ═══ DASHBOARD ═══ */
@@ -105,57 +82,123 @@ function Dash({data,setTab}){
     <div style={S.dday}><Fl1 s={{width:160,top:-35,left:-25}}/><Fl3 s={{width:120,top:0,right:-15}}/><Fl2 s={{width:140,bottom:-20,right:40}}/><Fl1 s={{width:110,bottom:5,left:5}}/>
       <div style={{position:"relative",zIndex:1}}>
         <div style={{fontSize:12,fontWeight:600,color:P.periDk,letterSpacing:3,marginBottom:14,opacity:0.5}}>OUR WEDDING</div>
-        <div style={{display:"flex",justifyContent:"center",gap:32,marginBottom:16}}>
+        <div className="couple-names" style={{display:"flex",justifyContent:"center",gap:32,marginBottom:16}}>
           <div style={{textAlign:"center"}}><div style={{fontSize:12,color:P.blueDk,fontWeight:600,marginBottom:4}}>신랑</div><div style={{fontSize:22,fontWeight:700,color:P.periDk}}>{data.groomName}</div></div>
           <div style={{fontSize:28,color:P.lav,alignSelf:"center"}}>♥</div>
           <div style={{textAlign:"center"}}><div style={{fontSize:12,color:P.blueDk,fontWeight:600,marginBottom:4}}>신부</div><div style={{fontSize:22,fontWeight:700,color:P.periDk}}>{data.brideName}</div></div>
         </div>
-        <div style={{fontSize:72,fontWeight:800,color:P.periDk,lineHeight:1,opacity:0.8}}>{dd>0?"D-"+dd:dd===0?"D-Day 🎉":"D+"+Math.abs(dd)}</div>
+        <div className="dday-num" style={{fontSize:72,fontWeight:800,color:P.periDk,lineHeight:1,opacity:0.8}}>{dd>0?"D-"+dd:dd===0?"D-Day 🎉":"D+"+Math.abs(dd)}</div>
         <div style={{fontSize:16,color:P.blueDk,marginTop:14,fontWeight:500}}>{fmtDate(data.weddingDate)} {data.weddingTime}</div>
-      </div>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+      </div></div>
+    <div className="stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
       <div style={{...S.card,background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`}}><div style={{fontSize:13,fontWeight:700,color:P.greenDk,marginBottom:14}}>📊 준비 진행률</div><div style={{height:12,background:"rgba(255,255,255,0.6)",borderRadius:6,overflow:"hidden",marginBottom:14}}><div style={{height:"100%",background:`linear-gradient(90deg,${P.green},${P.blue})`,borderRadius:6,width:pct+"%",transition:"width 0.5s"}}/></div><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:36,fontWeight:800,color:P.greenDk}}>{pct}%</span><span style={{fontSize:15,color:P.greenDk,opacity:0.7,alignSelf:"flex-end"}}>{dn}/{tot}</span></div></div>
       <div style={{...S.card,background:`linear-gradient(135deg,${P.lavBg},${P.lavLt})`}}><div style={{fontSize:13,fontWeight:700,color:P.lavDk,marginBottom:14}}>💰 예산 현황</div><div style={{fontSize:28,fontWeight:800,color:P.lavDk,marginBottom:6}}>{fmtW(bT)}</div><div style={{fontSize:15,color:P.lav}}>지출 {fmtW(bP)}</div><div style={{fontSize:15,color:P.greenDk,fontWeight:700}}>잔여 {fmtW(bT-bP)}</div></div>
     </div>
     <div style={{...S.card,background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`,border:"1px solid "+P.blue+"40"}}><div style={{fontSize:13,fontWeight:700,color:P.blueDk,marginBottom:14}}>🤖 결혼 준비 Tip</div>{tips.map((t,i)=><div key={i} style={{fontSize:15,color:P.text,lineHeight:1.9,padding:"5px 0"}}>{t}</div>)}</div>
     {upcoming.length>0&&<div style={S.card}><div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}><div style={{fontSize:13,fontWeight:700,color:P.periDk}}>📌 다가오는 일정</div><button style={S.lnk} onClick={()=>setTab("dates")}>전체 →</button></div>{upcoming.map((d,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",background:P.greenBg,borderRadius:14,marginBottom:8}}><span style={{fontWeight:600,fontSize:15,color:P.text}}>{d.name}</span><span style={{fontSize:14,color:P.periDk,fontWeight:600}}>{fmtDate(d.date)}</span></div>)}</div>}
-    <div style={S.card}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><div style={{fontSize:13,fontWeight:700,color:P.periDk}}>{cur?(cur.emoji+" 지금 할 일 — "+cur.label):"모든 준비 완료!"}</div>{cur&&<button style={S.lnk} onClick={()=>setTab("checklist")}>전체 →</button>}</div>{cur&&<div style={{fontSize:14,color:P.textSub,marginBottom:16}}>📅 {pLbl(cur.period)} · {mB(cur.period,data.weddingDate)} · 기한 {dln(cur.period)}</div>}{todo.slice(0,6).map(item=><div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",background:P.greenBg,borderRadius:14,marginBottom:8,flexWrap:"wrap"}}><Bg cat={item.cat}/><span style={{fontSize:15,color:P.text}}>{item.text}</span></div>)}{todo.length>6&&<div style={{fontSize:14,color:P.textMuted,textAlign:"center"}}>외 {todo.length-6}개</div>}</div>
+    <div style={S.card}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><div style={{fontSize:13,fontWeight:700,color:P.periDk}}>{cur?(cur.emoji+" 지금 할 일 — "+cur.label):"완료!"}</div>{cur&&<button style={S.lnk} onClick={()=>setTab("checklist")}>전체 →</button>}</div>{cur&&<div style={{fontSize:14,color:P.textSub,marginBottom:16}}>📅 {pLbl(cur.period)} · {mB(cur.period,data.weddingDate)}</div>}{todo.slice(0,6).map(item=><div key={item.id} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",background:P.greenBg,borderRadius:14,marginBottom:8,flexWrap:"wrap"}}><Bg cat={item.cat}/><span style={{fontSize:15,color:P.text}}>{item.text}</span></div>)}{todo.length>6&&<div style={{fontSize:14,color:P.textMuted,textAlign:"center"}}>외 {todo.length-6}개</div>}</div>
+  </div>;
+}
+
+/* ═══ CALENDAR ═══ */
+function CalTab({data,setTab}){
+  const[year,setYear]=useState(()=>new Date().getFullYear());
+  const[month,setMonth]=useState(()=>new Date().getMonth());
+  const prev=()=>{if(month===0){setMonth(11);setYear(year-1);}else setMonth(month-1);};
+  const next=()=>{if(month===11){setMonth(0);setYear(year+1);}else setMonth(month+1);};
+  const today=new Date();today.setHours(0,0,0,0);
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const days=[];for(let i=0;i<firstDay;i++)days.push(null);for(let i=1;i<=daysInMonth;i++)days.push(i);
+
+  // Collect events for this month
+  const events={};
+  // Key dates
+  (data.keyDates||[]).forEach(d=>{const dt=new Date(d.date);if(dt.getFullYear()===year&&dt.getMonth()===month){const day=dt.getDate();if(!events[day])events[day]=[];events[day].push({type:"date",name:d.name,color:P.periDk});}});
+  // Checklist deadlines
+  data.checklist.forEach(ph=>{const e=ph.period.split("/")[1].split("-").map(Number);const end=new Date(e[0],e[1],0);if(end.getFullYear()===year&&end.getMonth()===month){const day=end.getDate();if(!events[day])events[day]=[];events[day].push({type:"deadline",name:ph.emoji+" "+ph.label+" 마감",color:P.blueDk});}});
+  // Wedding date
+  if(data.weddingDate){const wd=new Date(data.weddingDate);if(wd.getFullYear()===year&&wd.getMonth()===month){const day=wd.getDate();if(!events[day])events[day]=[];events[day].unshift({type:"wedding",name:"💍 결혼식",color:"#E91E63"});}}
+
+  const monthNames=["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+  const dayNames=["일","월","화","수","목","금","토"];
+  const isToday=(d)=>d&&today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+
+  return<div style={S.tab}><h2 style={S.th}>📅 캘린더</h2>
+    <div style={S.card}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <button onClick={prev} style={S.calNav}>◀</button>
+        <div style={{fontSize:20,fontWeight:700,color:P.periDk}}>{year}년 {monthNames[month]}</div>
+        <button onClick={next} style={S.calNav}>▶</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4}}>
+        {dayNames.map((d,i)=><div key={d} style={{textAlign:"center",fontSize:13,fontWeight:700,color:i===0?"#E57373":i===6?P.blueDk:P.textSub,padding:"8px 0"}}>{d}</div>)}
+        {days.map((d,i)=>{const ev=d?events[d]:null;const td=isToday(d);return<div key={i} style={{minHeight:70,padding:4,borderRadius:12,background:td?P.periLt:ev?"#FAFCF8":"transparent",border:td?"2px solid "+P.peri:"1px solid transparent",position:"relative"}}>
+          {d&&<div style={{fontSize:14,fontWeight:td?700:500,color:td?P.periDk:i%7===0?"#E57373":P.text,textAlign:"center",marginBottom:2}}>{d}</div>}
+          {ev&&ev.slice(0,2).map((e,j)=><div key={j} style={{fontSize:10,fontWeight:600,color:"#fff",background:e.color,borderRadius:6,padding:"2px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.3}}>{e.name}</div>)}
+          {ev&&ev.length>2&&<div style={{fontSize:9,color:P.textMuted,textAlign:"center"}}>+{ev.length-2}</div>}
+        </div>;})}
+      </div>
+    </div>
+    {/* Legend */}
+    <div style={{...S.card,marginTop:16}}>
+      <div style={{fontSize:13,fontWeight:700,color:P.periDk,marginBottom:10}}>이번 달 일정</div>
+      {Object.entries(events).length===0&&<div style={{fontSize:14,color:P.textMuted}}>이번 달에는 일정이 없어요</div>}
+      {Object.entries(events).sort((a,b)=>Number(a[0])-Number(b[0])).map(([day,evs])=>evs.map((e,j)=><div key={day+"-"+j} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid "+P.border+"60"}}>
+        <div style={{width:8,height:8,borderRadius:4,background:e.color,flexShrink:0}}/>
+        <span style={{fontSize:14,color:P.textSub,fontWeight:600,minWidth:40}}>{month+1}/{day}</span>
+        <span style={{fontSize:14,color:P.text}}>{e.name}</span>
+      </div>))}
+    </div>
   </div>;
 }
 
 /* ═══ CHECKLIST ═══ */
 function CLTab({data,setData}){
   const[memoId,setMemoId]=useState(null);const[memoTxt,setMemoTxt]=useState("");
+  const[addPi,setAddPi]=useState(null);const[addF,setAddF]=useState({text:"",cat:"custom",note:""});
   const toggle=(pi,id)=>{const nc=data.checklist.map((p,i)=>i!==pi?p:{...p,items:p.items.map(it=>it.id===id?{...it,done:!it.done}:it)});setData({...data,checklist:nc});};
   const openMemo=(pi,item)=>{setMemoId({pi,id:item.id});setMemoTxt(item.memo||"");};
   const saveMemo=()=>{if(!memoId)return;const nc=data.checklist.map((p,i)=>i!==memoId.pi?p:{...p,items:p.items.map(it=>it.id===memoId.id?{...it,memo:memoTxt}:it)});setData({...data,checklist:nc});setMemoId(null);};
+  const addItem=()=>{if(!addF.text||addPi===null)return;const nc=data.checklist.map((p,i)=>i!==addPi?p:{...p,items:[...p.items,{id:"c"+Date.now(),text:addF.text,cat:addF.cat,note:addF.note,done:false,memo:"",custom:true}]});setData({...data,checklist:nc});setAddPi(null);setAddF({text:"",cat:"custom",note:""});};
+  const rmItem=(pi,id)=>{if(!confirm("삭제할까요?"))return;const nc=data.checklist.map((p,i)=>i!==pi?p:{...p,items:p.items.filter(it=>it.id!==id)});setData({...data,checklist:nc});};
   const dlCL=()=>{const rows=[];data.checklist.forEach(ph=>{ph.items.forEach(i=>{rows.push([ph.label,pLbl(ph.period),(CAT[i.cat]||CAT.etc).n,i.text,i.done?"완료":"미완료",i.note||"",i.memo||""]);});});dlCSV("체크리스트",["단계","시기","카테고리","항목","상태","기본메모","나의메모"],rows);};
-  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h2 style={{...S.th,margin:0}}>🌿 체크리스트</h2><DlB onClick={dlCL}/></div>
+
+  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:8}}><h2 style={{...S.th,margin:0}}>🌿 체크리스트</h2><DlB onClick={dlCL}/></div>
     <Modal title="메모 작성" open={memoId!==null} onClose={()=>setMemoId(null)}>
-      <div style={{marginBottom:20}}><label style={S.lbl}>이 항목에 대한 메모</label><p style={{fontSize:12,color:P.textMuted,margin:"-2px 0 8px"}}>업체 연락처, 주의사항, 가격 등 자유롭게</p><textarea style={{...MI,minHeight:120,resize:"vertical",lineHeight:1.7}} placeholder="메모를 입력하세요..." value={memoTxt} onChange={e=>setMemoTxt(e.target.value)}/></div>
+      <div style={{marginBottom:20}}><label style={S.lbl}>메모</label><textarea style={{...MI,minHeight:120,resize:"vertical",lineHeight:1.7}} placeholder="자유롭게 적어주세요..." value={memoTxt} onChange={e=>setMemoTxt(e.target.value)}/></div>
       <button style={{...S.btn,width:"100%"}} onClick={saveMemo}>저장하기</button>
+    </Modal>
+    <Modal title="항목 추가" open={addPi!==null} onClose={()=>setAddPi(null)}>
+      <div style={{marginBottom:20}}><label style={S.lbl}>할 일</label><input style={MI} placeholder="예: 피부관리 시작" value={addF.text} onChange={e=>setAddF({...addF,text:e.target.value})}/></div>
+      <div style={{marginBottom:20}}><label style={S.lbl}>카테고리</label><select style={MI} value={addF.cat} onChange={e=>setAddF({...addF,cat:e.target.value})}>{Object.entries(CAT).map(([k,c])=><option key={k} value={k}>{c.ic} {c.n}</option>)}</select></div>
+      <div style={{marginBottom:20}}><label style={S.lbl}>메모 (선택)</label><input style={MI} placeholder="참고사항" value={addF.note} onChange={e=>setAddF({...addF,note:e.target.value})}/></div>
+      <button style={{...S.btn,width:"100%"}} onClick={addItem}>추가하기</button>
     </Modal>
     <div style={{display:"flex",flexDirection:"column",gap:24}}>
       {data.checklist.map((ph,pi)=>{const st=pSt(ph.period),allD=ph.items.every(i=>i.done),dc=ph.items.filter(i=>i.done).length;
         const cg={};ph.items.forEach(it=>{if(!cg[it.cat])cg[it.cat]=[];cg[it.cat].push(it);});
-        return<div key={pi} style={{...S.card,borderLeft:"4px solid "+(st==="current"?P.blue:st==="past"?P.blueLt:"#E0E0E0"),padding:"28px 26px"}}>
+        return<div key={pi} style={{...S.card,borderLeft:"4px solid "+(st==="current"?P.blue:st==="past"?P.blueLt:"#E0E0E0"),padding:"24px 22px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",background:allD?P.green:st==="current"?P.blue:"#E0E0E0"}}>{allD?"✓":""}</span><span style={{fontSize:19,fontWeight:700,color:P.text}}>{ph.emoji} {ph.label}</span><span style={{fontSize:14,color:P.textMuted}}>{dc}/{ph.items.length}</span></div>
-            {st==="current"&&<span style={{padding:"5px 14px",borderRadius:10,fontSize:12,fontWeight:700,background:P.blueLt,color:P.blueDk}}>현재 단계</span>}
+            <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff",background:allD?P.green:st==="current"?P.blue:"#E0E0E0"}}>{allD?"✓":""}</span><span style={{fontSize:18,fontWeight:700,color:P.text}}>{ph.emoji} {ph.label}</span><span style={{fontSize:14,color:P.textMuted}}>{dc}/{ph.items.length}</span></div>
+            <div style={{display:"flex",gap:8}}>
+              {st==="current"&&<span style={{padding:"5px 14px",borderRadius:10,fontSize:12,fontWeight:700,background:P.blueLt,color:P.blueDk}}>현재</span>}
+              <button style={{...S.ebtn,fontSize:12,padding:"5px 12px"}} onClick={()=>{setAddF({text:"",cat:"custom",note:""});setAddPi(pi);}}>+ 추가</button>
+            </div>
           </div>
-          <div style={{fontSize:14,color:P.textSub,marginBottom:20,paddingLeft:40}}>📅 {pLbl(ph.period)} · {mB(ph.period,data.weddingDate)} · 기한 {dln(ph.period)}</div>
+          <div style={{fontSize:13,color:P.textSub,marginBottom:18,paddingLeft:38}}>📅 {pLbl(ph.period)} · {mB(ph.period,data.weddingDate)} · 기한 {dln(ph.period)}</div>
           {Object.entries(cg).map(([cat,items])=>{const c=CAT[cat]||CAT.etc;return<div key={cat} style={{marginBottom:16}}>
             <div style={{fontSize:13,fontWeight:700,color:c.fg,marginBottom:8,paddingLeft:4}}>{c.ic} {c.n}</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {items.map(item=><div key={item.id} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"12px 16px",borderRadius:14,background:item.done?"#F8F8F8":P.greenBg,opacity:item.done?0.4:1,border:"1px solid "+(item.done?"#F0F0F0":P.border)}}>
-                <div style={{width:24,height:24,borderRadius:8,border:"2px solid "+(item.done?P.green:P.peri),background:item.done?P.green:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}} onClick={()=>toggle(pi,item.id)}>{item.done?"✓":""}</div>
-                <div style={{flex:1,cursor:"pointer"}} onClick={()=>openMemo(pi,item)}>
+              {items.map(item=><div key={item.id} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"12px 14px",borderRadius:14,background:item.done?"#F8F8F8":P.greenBg,opacity:item.done?0.4:1,border:"1px solid "+(item.done?"#F0F0F0":P.border)}}>
+                <div style={{width:26,height:26,borderRadius:8,border:"2px solid "+(item.done?P.green:P.peri),background:item.done?P.green:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}} onClick={()=>toggle(pi,item.id)}>{item.done?"✓":""}</div>
+                <div style={{flex:1,cursor:"pointer",minWidth:0}} onClick={()=>openMemo(pi,item)}>
                   <span style={{textDecoration:item.done?"line-through":"none",fontSize:15,color:P.text}}>{item.text}</span>
                   {item.note&&<div style={{fontSize:13,color:P.textMuted,marginTop:4}}>💡 {item.note}</div>}
                   {item.memo&&<div style={{fontSize:13,color:P.periDk,marginTop:4,background:P.periLt,padding:"6px 10px",borderRadius:8}}>📝 {item.memo}</div>}
                   {!item.memo&&!item.done&&<div style={{fontSize:12,color:"#D0D0D8",marginTop:4}}>클릭하여 메모 추가</div>}
                 </div>
+                {item.custom&&<button style={{...S.dbtn,fontSize:16}} onClick={()=>rmItem(pi,item.id)}>✕</button>}
               </div>)}
             </div>
           </div>;})}
@@ -169,65 +212,63 @@ function BudTab({data,setData}){
   const[show,setShow]=useState(false);const[editId,setEditId]=useState(null);
   const[f,setF]=useState({name:"",category:"venue",unitPrice:"",qty:"1",paid:""});
   const[ef,setEf]=useState({name:"",category:"venue",unitPrice:"",qty:"1",paid:""});
-  const resetF=()=>setF({name:"",category:"venue",unitPrice:"",qty:"1",paid:""});
-  const add=()=>{if(!f.name||!f.unitPrice)return;const u=parseInt(f.unitPrice)||0,q=parseInt(f.qty)||1;setData({...data,budget:[...data.budget,{id:Date.now().toString(),name:f.name,category:f.category,unitPrice:u,qty:q,amount:u*q,paid:parseInt(f.paid)||0}]});resetF();setShow(false);};
-  const rm=id=>{if(confirm("삭제할까요?"))setData({...data,budget:data.budget.filter(b=>b.id!==id)});};
+  const add=()=>{if(!f.name||!f.unitPrice)return;const u=parseInt(f.unitPrice)||0,q=parseInt(f.qty)||1;setData({...data,budget:[...data.budget,{id:Date.now().toString(),name:f.name,category:f.category,unitPrice:u,qty:q,amount:u*q,paid:parseInt(f.paid)||0}]});setF({name:"",category:"venue",unitPrice:"",qty:"1",paid:""});setShow(false);};
+  const rm=id=>{if(confirm("삭제?"))setData({...data,budget:data.budget.filter(b=>b.id!==id)});};
   const openEd=item=>{setEditId(item.id);setEf({name:item.name,category:item.category,unitPrice:String(item.unitPrice),qty:String(item.qty),paid:String(item.paid)});};
   const saveEd=()=>{const u=parseInt(ef.unitPrice)||0,q=parseInt(ef.qty)||1;setData({...data,budget:data.budget.map(b=>b.id===editId?{...b,name:ef.name,category:ef.category,unitPrice:u,qty:q,amount:u*q,paid:parseInt(ef.paid)||0}:b)});setEditId(null);};
   const t=data.budget.reduce((s,b)=>s+b.amount,0),tp=data.budget.reduce((s,b)=>s+b.paid,0);
   const gr={};data.budget.forEach(b=>{if(!gr[b.category])gr[b.category]={t:0,p:0};gr[b.category].t+=b.amount;gr[b.category].p+=b.paid;});
-  const dlB2=()=>{dlCSV("예산",["카테고리","항목명","단가","수량","견적","지출","잔여"],data.budget.map(b=>[(CAT[b.category]||CAT.etc).n,b.name,b.unitPrice,b.qty,b.amount,b.paid,b.amount-b.paid]));};
-  const addAmt=(parseInt(f.unitPrice)||0)*(parseInt(f.qty)||1);
-  const edAmt=(parseInt(ef.unitPrice)||0)*(parseInt(ef.qty)||1);
-  const budFields=(v,sv,amt)=><>
+  const dlB2=()=>{dlCSV("예산",["카테고리","항목","단가","수량","견적","지출","잔여"],data.budget.map(b=>[(CAT[b.category]||CAT.etc).n,b.name,b.unitPrice,b.qty,b.amount,b.paid,b.amount-b.paid]));};
+  const addAmt=(parseInt(f.unitPrice)||0)*(parseInt(f.qty)||1);const edAmt=(parseInt(ef.unitPrice)||0)*(parseInt(ef.qty)||1);
+  const budF=(v,sv,amt)=><>
     <div style={{marginBottom:20}}><label style={S.lbl}>항목명</label><input style={MI} placeholder="예: 웨딩홀 대관료" value={v.name} onChange={e=>sv({...v,name:e.target.value})}/></div>
     <div style={{marginBottom:20}}><label style={S.lbl}>카테고리</label><select style={MI} value={v.category} onChange={e=>sv({...v,category:e.target.value})}>{Object.entries(CAT).map(([k,c])=><option key={k} value={k}>{c.ic} {c.n}</option>)}</select></div>
     <div style={{display:"flex",gap:12,marginBottom:20}}><div style={{flex:1}}><label style={S.lbl}>단가</label><input style={MI} type="number" placeholder="0" value={v.unitPrice} onChange={e=>sv({...v,unitPrice:e.target.value})}/></div><div style={{width:30,display:"flex",alignItems:"flex-end",justifyContent:"center",paddingBottom:16,fontSize:20,color:P.textMuted}}>×</div><div style={{flex:1}}><label style={S.lbl}>수량</label><input style={MI} type="number" placeholder="1" value={v.qty} onChange={e=>sv({...v,qty:e.target.value})}/></div></div>
     <div style={{background:`linear-gradient(135deg,${P.blueBg},${P.lavBg})`,borderRadius:16,padding:"18px 22px",marginBottom:20,textAlign:"center"}}><div style={{fontSize:13,color:P.periDk,fontWeight:600,marginBottom:4}}>견적 금액</div><div style={{fontSize:30,fontWeight:800,color:P.periDk}}>{fmtW(amt)}</div></div>
     <div style={{marginBottom:20}}><label style={S.lbl}>지출액 (이미 지급한 금액)</label><input style={MI} type="number" placeholder="0" value={v.paid} onChange={e=>sv({...v,paid:e.target.value})}/></div>
   </>;
-  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h2 style={{...S.th,margin:0}}>🌻 예산 관리</h2><DlB onClick={dlB2}/></div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:24}}>
-      <div style={{...S.card,textAlign:"center",background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`}}><div style={{fontSize:13,color:P.blueDk,fontWeight:700,marginBottom:8}}>총 예산</div><div style={{fontSize:28,fontWeight:800,color:P.blueDk}}>{fmtW(t)}</div></div>
-      <div style={{...S.card,textAlign:"center",background:`linear-gradient(135deg,${P.lavBg},${P.lavLt})`}}><div style={{fontSize:13,color:P.lavDk,fontWeight:700,marginBottom:8}}>지출</div><div style={{fontSize:28,fontWeight:800,color:P.lavDk}}>{fmtW(tp)}</div></div>
-      <div style={{...S.card,textAlign:"center",background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`}}><div style={{fontSize:13,color:P.greenDk,fontWeight:700,marginBottom:8}}>잔여</div><div style={{fontSize:28,fontWeight:800,color:P.greenDk}}>{fmtW(t-tp)}</div></div>
+  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:8}}><h2 style={{...S.th,margin:0}}>🌻 예산 관리</h2><DlB onClick={dlB2}/></div>
+    <div className="budget-summary" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:24}}>
+      <div style={{...S.card,textAlign:"center",background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`}}><div style={{fontSize:13,color:P.blueDk,fontWeight:700,marginBottom:8}}>총 예산</div><div className="budget-num" style={{fontSize:28,fontWeight:800,color:P.blueDk}}>{fmtW(t)}</div></div>
+      <div style={{...S.card,textAlign:"center",background:`linear-gradient(135deg,${P.lavBg},${P.lavLt})`}}><div style={{fontSize:13,color:P.lavDk,fontWeight:700,marginBottom:8}}>지출</div><div className="budget-num" style={{fontSize:28,fontWeight:800,color:P.lavDk}}>{fmtW(tp)}</div></div>
+      <div style={{...S.card,textAlign:"center",background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`}}><div style={{fontSize:13,color:P.greenDk,fontWeight:700,marginBottom:8}}>잔여</div><div className="budget-num" style={{fontSize:28,fontWeight:800,color:P.greenDk}}>{fmtW(t-tp)}</div></div>
     </div>
     {Object.keys(gr).length>0&&<div style={{...S.card,marginBottom:22}}><div style={{fontSize:13,fontWeight:700,color:P.periDk,marginBottom:14}}>카테고리별</div>{Object.entries(gr).map(([k,g])=>{const c=CAT[k]||CAT.etc,pc=g.t>0?Math.round(g.p/g.t*100):0;return<div key={k} style={{marginBottom:14}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><Bg cat={k}/><span style={{fontSize:14,color:P.text}}>{fmtW(g.p)} / {fmtW(g.t)}</span></div><div style={{height:10,background:P.greenBg,borderRadius:5,overflow:"hidden"}}><div style={{height:"100%",background:c.fg,borderRadius:5,width:pc+"%",opacity:0.45}}/></div></div>;})}</div>}
-    <button style={{...S.btn,width:"100%",marginBottom:22}} onClick={()=>{resetF();setShow(true);}}>+ 예산 항목 추가</button>
-    <Modal title="예산 항목 추가" open={show} onClose={()=>setShow(false)}>{budFields(f,setF,addAmt)}<button style={{...S.btn,width:"100%"}} onClick={add}>추가하기</button></Modal>
-    <Modal title="예산 항목 수정" open={editId!==null} onClose={()=>setEditId(null)}>{budFields(ef,setEf,edAmt)}<button style={{...S.btn,width:"100%"}} onClick={saveEd}>저장하기</button></Modal>
+    <button style={{...S.btn,width:"100%",marginBottom:22}} onClick={()=>{setF({name:"",category:"venue",unitPrice:"",qty:"1",paid:""});setShow(true);}}>+ 예산 항목 추가</button>
+    <Modal title="예산 추가" open={show} onClose={()=>setShow(false)}>{budF(f,setF,addAmt)}<button style={{...S.btn,width:"100%"}} onClick={add}>추가하기</button></Modal>
+    <Modal title="예산 수정" open={editId!==null} onClose={()=>setEditId(null)}>{budF(ef,setEf,edAmt)}<button style={{...S.btn,width:"100%"}} onClick={saveEd}>저장하기</button></Modal>
     {data.budget.length===0&&<div style={S.empty}>예산 항목을 추가해보세요 🌻</div>}
     {data.budget.map(item=>{const pp=item.amount>0?Math.round(item.paid/item.amount*100):0;return<div key={item.id} style={{...S.card,marginBottom:12}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><Bg cat={item.category}/><span style={{fontWeight:700,fontSize:17,color:P.text}}>{item.name}</span></div><div style={{display:"flex",gap:8}}><button style={S.ebtn} onClick={()=>openEd(item)}>수정</button><button style={S.dbtn} onClick={()=>rm(item.id)}>✕</button></div></div>
-      <div style={{fontSize:15,color:P.textSub,marginBottom:10}}>{fmtW(item.unitPrice)} × {item.qty} = <b style={{color:P.text,fontSize:17}}>{fmtW(item.amount)}</b></div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:6}}><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><Bg cat={item.category}/><span style={{fontWeight:700,fontSize:16,color:P.text}}>{item.name}</span></div><div style={{display:"flex",gap:8}}><button style={S.ebtn} onClick={()=>openEd(item)}>수정</button><button style={S.dbtn} onClick={()=>rm(item.id)}>✕</button></div></div>
+      <div style={{fontSize:15,color:P.textSub,marginBottom:10}}>{fmtW(item.unitPrice)} × {item.qty} = <b style={{color:P.text,fontSize:16}}>{fmtW(item.amount)}</b></div>
       <div style={{height:10,background:P.greenBg,borderRadius:5,overflow:"hidden",marginBottom:10}}><div style={{height:"100%",background:`linear-gradient(90deg,${P.green},${P.blue})`,borderRadius:5,width:Math.min(pp,100)+"%"}}/></div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:15}}><span style={{color:P.lavDk}}>지출 {fmtW(item.paid)}</span><span style={{color:P.greenDk,fontWeight:700}}>잔여 {fmtW(item.amount-item.paid)}</span></div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:14}}><span style={{color:P.lavDk}}>지출 {fmtW(item.paid)}</span><span style={{color:P.greenDk,fontWeight:700}}>잔여 {fmtW(item.amount-item.paid)}</span></div>
     </div>;})}
   </div>;
 }
 
-/* ═══ KEY DATES ═══ */
+/* ═══ DATES ═══ */
 function DatesTab({data,setData}){
   const[show,setShow]=useState(false);const[editId,setEditId]=useState(null);
   const[f,setF]=useState({name:"",date:"",memo:""});const[ef,setEf]=useState({name:"",date:"",memo:""});
   const add=()=>{if(!f.name||!f.date)return;setData({...data,keyDates:[...(data.keyDates||[]),{id:Date.now().toString(),...f}]});setF({name:"",date:"",memo:""});setShow(false);};
-  const rm=id=>{if(confirm("삭제할까요?"))setData({...data,keyDates:(data.keyDates||[]).filter(d=>d.id!==id)});};
+  const rm=id=>{if(confirm("삭제?"))setData({...data,keyDates:(data.keyDates||[]).filter(d=>d.id!==id)});};
   const openEd=d=>{setEditId(d.id);setEf({name:d.name,date:d.date,memo:d.memo||""});};
   const saveEd=()=>{setData({...data,keyDates:(data.keyDates||[]).map(d=>d.id===editId?{...d,...ef}:d)});setEditId(null);};
   const sorted=[...(data.keyDates||[])].sort((a,b)=>new Date(a.date)-new Date(b.date));const today=new Date();today.setHours(0,0,0,0);
   const dlD=()=>{dlCSV("주요일정",["일정명","날짜","D-day","메모"],sorted.map(d=>[d.name,d.date,getDday(d.date),d.memo||""]));};
-  const dateFields=(v,sv)=><>
-    <div style={{marginBottom:20}}><label style={S.lbl}>일정명</label><input style={MI} placeholder="예: 상견례, 촬영일" value={v.name} onChange={e=>sv({...v,name:e.target.value})}/></div>
+  const dtF=(v,sv)=><>
+    <div style={{marginBottom:20}}><label style={S.lbl}>일정명</label><input style={MI} placeholder="예: 상견례" value={v.name} onChange={e=>sv({...v,name:e.target.value})}/></div>
     <div style={{marginBottom:20}}><label style={S.lbl}>날짜</label><input type="date" style={MI} value={v.date} onChange={e=>sv({...v,date:e.target.value})}/></div>
     <div style={{marginBottom:20}}><label style={S.lbl}>메모 (선택)</label><input style={MI} placeholder="장소, 시간 등" value={v.memo} onChange={e=>sv({...v,memo:e.target.value})}/></div>
   </>;
-  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h2 style={{...S.th,margin:0}}>📌 주요 일정</h2><DlB onClick={dlD}/></div>
+  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:8}}><h2 style={{...S.th,margin:0}}>📌 주요 일정</h2><DlB onClick={dlD}/></div>
     <button style={{...S.btn,width:"100%",marginBottom:22}} onClick={()=>{setF({name:"",date:"",memo:""});setShow(true);}}>+ 일정 추가</button>
-    <Modal title="일정 추가" open={show} onClose={()=>setShow(false)}>{dateFields(f,setF)}<button style={{...S.btn,width:"100%"}} onClick={add}>추가하기</button></Modal>
-    <Modal title="일정 수정" open={editId!==null} onClose={()=>setEditId(null)}>{dateFields(ef,setEf)}<button style={{...S.btn,width:"100%"}} onClick={saveEd}>저장하기</button></Modal>
+    <Modal title="일정 추가" open={show} onClose={()=>setShow(false)}>{dtF(f,setF)}<button style={{...S.btn,width:"100%"}} onClick={add}>추가하기</button></Modal>
+    <Modal title="일정 수정" open={editId!==null} onClose={()=>setEditId(null)}>{dtF(ef,setEf)}<button style={{...S.btn,width:"100%"}} onClick={saveEd}>저장하기</button></Modal>
     {sorted.length===0&&<div style={S.empty}>주요 일정을 추가해보세요 📌</div>}
-    {sorted.map(d=>{const dd=getDday(d.date);const past=new Date(d.date)<today;return<div key={d.id} style={{...S.card,marginBottom:12,opacity:past?0.45:1,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-      <div style={{flex:1,cursor:"pointer"}} onClick={()=>openEd(d)}><div style={{fontSize:18,fontWeight:700,color:P.text}}>{d.name}</div><div style={{fontSize:15,color:P.periDk,marginTop:4,fontWeight:500}}>{fmtDate(d.date)} {dd>0?"(D-"+dd+")":dd===0?"(오늘!)":"(지남)"}</div>{d.memo&&<div style={{fontSize:14,color:P.textSub,marginTop:4}}>📝 {d.memo}</div>}</div>
+    {sorted.map(d=>{const dd=getDday(d.date);return<div key={d.id} style={{...S.card,marginBottom:12,opacity:new Date(d.date)<today?0.45:1,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div style={{flex:1,cursor:"pointer"}} onClick={()=>openEd(d)}><div style={{fontSize:17,fontWeight:700,color:P.text}}>{d.name}</div><div style={{fontSize:15,color:P.periDk,marginTop:4,fontWeight:500}}>{fmtDate(d.date)} {dd>0?"(D-"+dd+")":dd===0?"(오늘!)":"(지남)"}</div>{d.memo&&<div style={{fontSize:14,color:P.textSub,marginTop:4}}>📝 {d.memo}</div>}</div>
       <div style={{display:"flex",gap:8,flexShrink:0}}><button style={S.ebtn} onClick={()=>openEd(d)}>수정</button><button style={S.dbtn} onClick={()=>rm(d.id)}>✕</button></div>
     </div>;})}
   </div>;
@@ -238,23 +279,23 @@ function VenTab({data,setData}){
   const[show,setShow]=useState(false);const[editId,setEditId]=useState(null);
   const[f,setF]=useState({name:"",category:"venue",phone:"",memo:""});const[ef,setEf]=useState({name:"",category:"venue",phone:"",memo:""});
   const add=()=>{if(!f.name)return;setData({...data,vendors:[...data.vendors,{id:Date.now().toString(),...f}]});setF({name:"",category:"venue",phone:"",memo:""});setShow(false);};
-  const rm=id=>{if(confirm("삭제할까요?"))setData({...data,vendors:data.vendors.filter(v=>v.id!==id)});};
+  const rm=id=>{if(confirm("삭제?"))setData({...data,vendors:data.vendors.filter(v=>v.id!==id)});};
   const openEd=v=>{setEditId(v.id);setEf({name:v.name,category:v.category,phone:v.phone||"",memo:v.memo||""});};
   const saveEd=()=>{setData({...data,vendors:data.vendors.map(v=>v.id===editId?{...v,...ef}:v)});setEditId(null);};
   const dlV=()=>{dlCSV("업체",["카테고리","업체명","연락처","메모"],data.vendors.map(v=>[(CAT[v.category]||CAT.etc).n,v.name,v.phone||"",v.memo||""]));};
-  const venFields=(v,sv)=><>
+  const vnF=(v,sv)=><>
     <div style={{marginBottom:20}}><label style={S.lbl}>업체명</label><input style={MI} placeholder="예: 보네르스포사" value={v.name} onChange={e=>sv({...v,name:e.target.value})}/></div>
     <div style={{marginBottom:20}}><label style={S.lbl}>카테고리</label><select style={MI} value={v.category} onChange={e=>sv({...v,category:e.target.value})}>{Object.entries(CAT).map(([k,c])=><option key={k} value={k}>{c.ic} {c.n}</option>)}</select></div>
     <div style={{marginBottom:20}}><label style={S.lbl}>연락처</label><input style={MI} placeholder="010-0000-0000" value={v.phone} onChange={e=>sv({...v,phone:e.target.value})}/></div>
-    <div style={{marginBottom:20}}><label style={S.lbl}>메모 (선택)</label><input style={MI} placeholder="담당자, 특이사항 등" value={v.memo} onChange={e=>sv({...v,memo:e.target.value})}/></div>
+    <div style={{marginBottom:20}}><label style={S.lbl}>메모 (선택)</label><input style={MI} placeholder="담당자 등" value={v.memo} onChange={e=>sv({...v,memo:e.target.value})}/></div>
   </>;
-  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h2 style={{...S.th,margin:0}}>📇 업체 연락처</h2><DlB onClick={dlV}/></div>
+  return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:8}}><h2 style={{...S.th,margin:0}}>📇 업체 연락처</h2><DlB onClick={dlV}/></div>
     <button style={{...S.btn,width:"100%",marginBottom:22}} onClick={()=>{setF({name:"",category:"venue",phone:"",memo:""});setShow(true);}}>+ 업체 추가</button>
-    <Modal title="업체 추가" open={show} onClose={()=>setShow(false)}>{venFields(f,setF)}<button style={{...S.btn,width:"100%"}} onClick={add}>추가하기</button></Modal>
-    <Modal title="업체 수정" open={editId!==null} onClose={()=>setEditId(null)}>{venFields(ef,setEf)}<button style={{...S.btn,width:"100%"}} onClick={saveEd}>저장하기</button></Modal>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:14}}>
-      {data.vendors.length===0&&<div style={S.empty}>업체 정보를 추가해보세요 📇</div>}
-      {data.vendors.map(v=><div key={v.id} style={{...S.card,background:P.greenBg}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><Bg cat={v.category}/><div style={{display:"flex",gap:6}}><button style={S.ebtn} onClick={()=>openEd(v)}>수정</button><button style={S.dbtn} onClick={()=>rm(v.id)}>✕</button></div></div><div style={{fontWeight:700,fontSize:18,color:P.text,marginBottom:6}}>{v.name}</div>{v.phone&&<div style={{fontSize:16,color:P.blueDk,fontWeight:500}}>📞 {v.phone}</div>}{v.memo&&<div style={{fontSize:14,color:P.textSub,marginTop:6}}>📝 {v.memo}</div>}</div>)}
+    <Modal title="업체 추가" open={show} onClose={()=>setShow(false)}>{vnF(f,setF)}<button style={{...S.btn,width:"100%"}} onClick={add}>추가하기</button></Modal>
+    <Modal title="업체 수정" open={editId!==null} onClose={()=>setEditId(null)}>{vnF(ef,setEf)}<button style={{...S.btn,width:"100%"}} onClick={saveEd}>저장하기</button></Modal>
+    <div className="vendor-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+      {data.vendors.length===0&&<div style={S.empty}>업체를 추가해보세요 📇</div>}
+      {data.vendors.map(v=><div key={v.id} style={{...S.card,background:P.greenBg}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><Bg cat={v.category}/><div style={{display:"flex",gap:6}}><button style={S.ebtn} onClick={()=>openEd(v)}>수정</button><button style={S.dbtn} onClick={()=>rm(v.id)}>✕</button></div></div><div style={{fontWeight:700,fontSize:17,color:P.text,marginBottom:6}}>{v.name}</div>{v.phone&&<div style={{fontSize:15,color:P.blueDk}}>📞 {v.phone}</div>}{v.memo&&<div style={{fontSize:14,color:P.textSub,marginTop:6}}>📝 {v.memo}</div>}</div>)}
     </div>
   </div>;
 }
@@ -262,26 +303,27 @@ function VenTab({data,setData}){
 /* ═══ SETTINGS ═══ */
 function SetTab({data,setData,coupleKey,onLogout,onRefresh}){
   const[f,setF]=useState({groomName:data.groomName,brideName:data.brideName,weddingDate:data.weddingDate,weddingTime:data.weddingTime});const[saved,setSaved]=useState(false);
-  const save=()=>{const m={};data.checklist.forEach(p=>p.items.forEach(i=>{m[i.id]={done:i.done,memo:i.memo||""};}));const nc=JSON.parse(JSON.stringify(CL)).map(p=>({...p,items:p.items.map(i=>({...i,done:m[i.id]?.done||false,memo:m[i.id]?.memo||""}))}));setData({...data,...f,checklist:nc});setSaved(true);setTimeout(()=>setSaved(false),2000);};
+  const save=()=>{const m={};data.checklist.forEach(p=>p.items.forEach(i=>{m[i.id]={done:i.done,memo:i.memo||"",custom:i.custom,text:i.text,cat:i.cat,note:i.note};}));const nc=JSON.parse(JSON.stringify(CL)).map(p=>({...p,items:p.items.map(i=>({...i,done:m[i.id]?.done||false,memo:m[i.id]?.memo||""}))}));
+    // Preserve custom items
+    data.checklist.forEach((p,pi)=>{p.items.forEach(i=>{if(i.custom&&nc[pi]){nc[pi].items.push(i);}});});
+    setData({...data,...f,checklist:nc});setSaved(true);setTimeout(()=>setSaved(false),2000);};
   return<div style={S.tab}><h2 style={S.th}>⚙️ 설정</h2>
-    <div style={S.card}><div style={{fontSize:15,color:P.textSub,marginBottom:22}}>커플 키: <b style={{color:P.periDk}}>{coupleKey}</b> · ☁️ 클라우드 저장</div>
+    <div style={S.card}><div style={{fontSize:15,color:P.textSub,marginBottom:22}}>커플 키: <b style={{color:P.periDk}}>{coupleKey}</b> · ☁️ 클라우드</div>
       <div style={{display:"flex",flexDirection:"column",gap:16,maxWidth:480}}>
         <div><label style={S.lbl}>신랑</label><input style={MI} value={f.groomName} onChange={e=>setF({...f,groomName:e.target.value})}/></div>
         <div><label style={S.lbl}>신부</label><input style={MI} value={f.brideName} onChange={e=>setF({...f,brideName:e.target.value})}/></div>
         <div><label style={S.lbl}>결혼 예정일</label><input type="date" style={MI} value={f.weddingDate} onChange={e=>setF({...f,weddingDate:e.target.value})}/></div>
         <div><label style={S.lbl}>예식 시간</label><input type="time" style={MI} value={f.weddingTime} onChange={e=>setF({...f,weddingTime:e.target.value})}/></div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:4}}>
-          <button style={S.btn} onClick={save}>{saved?"✓ 저장 완료":"저장"}</button>
+          <button style={S.btn} onClick={save}>{saved?"✓ 저장!":"저장"}</button>
           <button style={{padding:"14px 20px",background:P.blueLt,color:P.blueDk,border:"none",borderRadius:14,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={onRefresh}>🔄 새로고침</button>
           <button style={{padding:"14px 20px",background:"#F0F0F0",color:P.textSub,border:"none",borderRadius:14,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={onLogout}>로그아웃</button>
         </div>
-      </div>
-    </div>
-  </div>;
+      </div></div></div>;
 }
 
 /* ═══ MAIN ═══ */
-const TABS=[{id:"dashboard",l:"홈",i:"🏡"},{id:"checklist",l:"체크리스트",i:"🌿"},{id:"budget",l:"예산",i:"🌻"},{id:"dates",l:"일정",i:"📌"},{id:"vendors",l:"업체",i:"📇"},{id:"settings",l:"설정",i:"⚙️"}];
+const TABS=[{id:"dashboard",l:"홈",i:"🏡"},{id:"checklist",l:"체크리스트",i:"🌿"},{id:"budget",l:"예산",i:"🌻"},{id:"calendar",l:"캘린더",i:"📅"},{id:"dates",l:"일정",i:"📌"},{id:"vendors",l:"업체",i:"📇"},{id:"settings",l:"설정",i:"⚙️"}];
 
 export default function App(){
   const[ck,setCk]=useState(null);const[data,setDR]=useState(null);const[tab,setTab]=useState("dashboard");const[loading,setLoading]=useState(true);const[toast,setToast]=useState({msg:"",show:false});
@@ -291,7 +333,7 @@ export default function App(){
 
   const onLogin=(key,d)=>{setCk(key);setDR(d);localStorage.setItem("wp_ck",key);};
   const onLogout=()=>{localStorage.removeItem("wp_ck");setCk(null);setDR(null);setTab("dashboard");};
-  const onRefresh=async()=>{if(!ck)return;setLoading(true);const d=await dbLoad(ck);if(d){setDR(d);showT("최신 데이터를 불러왔어요");}setLoading(false);};
+  const onRefresh=async()=>{if(!ck)return;setLoading(true);const d=await dbLoad(ck);if(d){setDR(d);showT("최신 데이터 불러옴");}setLoading(false);};
 
   const setData=useCallback(nd=>{
     setDR(nd);try{localStorage.setItem("wp_bk_"+(ck||""),JSON.stringify(nd));}catch{}
@@ -299,17 +341,18 @@ export default function App(){
     timerRef.current=setTimeout(()=>{if(ck)dbSave(ck,nd).then(()=>showT("☁️ 저장 완료"));},600);
   },[ck]);
 
-  if(loading)return<div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:FONT,background:P.bg}}><div style={{fontSize:48}}>💍</div><div style={{color:P.peri,marginTop:12,fontSize:15}}>불러오는 중...</div></div>;
+  if(loading)return<div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:FONT,background:P.bg}}><div style={{fontSize:48}}>💍</div><div style={{color:P.peri,marginTop:12}}>불러오는 중...</div></div>;
   if(!ck||!data)return<><LoginScreen onLogin={onLogin}/><Toast {...toast}/></>;
   if(!data.isSetup)return<><SetupScreen data={data} setData={setData}/><Toast {...toast}/></>;
 
   return<><div style={S.app}>
     <nav style={S.side}><div style={{display:"flex",alignItems:"center",gap:8,padding:"0 12px 10px"}}><span style={{fontSize:22}}>💍</span><span style={{fontSize:17,fontWeight:700,color:P.periDk}}>Wedding</span></div><div style={{fontSize:13,color:P.textSub,padding:"0 14px 14px",borderBottom:"1px solid "+P.border,marginBottom:10}}>{data.groomName} ♥ {data.brideName}</div>{TABS.map(t=><button key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",border:"none",borderRadius:12,fontSize:15,cursor:"pointer",fontFamily:FONT,background:tab===t.id?P.periLt:"transparent",color:tab===t.id?P.periDk:P.textSub,fontWeight:tab===t.id?700:400}} onClick={()=>setTab(t.id)}><span>{t.i}</span><span>{t.l}</span></button>)}</nav>
-    <nav style={S.mob}>{TABS.map(t=><button key={t.id} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:1,background:"none",border:"none",padding:"6px 4px",cursor:"pointer",fontFamily:FONT,color:tab===t.id?P.periDk:P.textMuted,fontWeight:tab===t.id?700:400}} onClick={()=>setTab(t.id)}><span style={{fontSize:18}}>{t.i}</span><span style={{fontSize:9}}>{t.l}</span></button>)}</nav>
+    <nav style={S.mob}>{TABS.map(t=><button key={t.id} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"none",border:"none",padding:"8px 2px",cursor:"pointer",fontFamily:FONT,color:tab===t.id?P.periDk:P.textMuted,fontWeight:tab===t.id?700:400,minWidth:0}} onClick={()=>setTab(t.id)}><span style={{fontSize:20}}>{t.i}</span><span style={{fontSize:10}}>{t.l}</span></button>)}</nav>
     <main style={S.main}>
       {tab==="dashboard"&&<Dash data={data} setTab={setTab}/>}
       {tab==="checklist"&&<CLTab data={data} setData={setData}/>}
       {tab==="budget"&&<BudTab data={data} setData={setData}/>}
+      {tab==="calendar"&&<CalTab data={data} setTab={setTab}/>}
       {tab==="dates"&&<DatesTab data={data} setData={setData}/>}
       {tab==="vendors"&&<VenTab data={data} setData={setData}/>}
       {tab==="settings"&&<SetTab data={data} setData={setData} coupleKey={ck} onLogout={onLogout} onRefresh={onRefresh}/>}
@@ -319,20 +362,38 @@ export default function App(){
 
 const S={
   wrap:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(150deg,${P.greenBg} 0%,${P.blueBg} 30%,${P.periBg} 60%,${P.lavBg} 100%)`,padding:16,fontFamily:FONT,position:"relative",overflow:"hidden"},
-  lc:{background:"rgba(255,255,255,0.92)",borderRadius:28,padding:"48px 40px",maxWidth:440,width:"100%",boxShadow:"0 24px 64px rgba(91,126,174,0.08)",textAlign:"center",backdropFilter:"blur(12px)",position:"relative",zIndex:2},
+  lc:{background:"rgba(255,255,255,0.92)",borderRadius:28,padding:"44px 36px",maxWidth:440,width:"100%",boxShadow:"0 24px 64px rgba(91,126,174,0.08)",textAlign:"center",backdropFilter:"blur(12px)",position:"relative",zIndex:2},
   lbl:{fontSize:14,fontWeight:600,color:"#4A4A5A",display:"block",marginBottom:6},
   btn:{padding:"14px 28px",background:`linear-gradient(135deg,${P.peri},${P.blue})`,color:"#fff",border:"none",borderRadius:14,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:FONT,boxShadow:"0 4px 14px rgba(110,200,228,0.2)"},
   app:{display:"flex",minHeight:"100vh",background:P.bg,fontFamily:FONT},
-  side:{width:210,background:"rgba(246,249,242,0.98)",borderRight:"1px solid "+P.border,padding:"24px 12px",display:"flex",flexDirection:"column",gap:3,position:"fixed",top:0,left:0,bottom:0,zIndex:10},
-  mob:{display:"none",position:"fixed",bottom:0,left:0,right:0,background:"rgba(246,249,242,0.98)",borderTop:"1px solid "+P.border,zIndex:10,justifyContent:"space-around",padding:"5px 0 env(safe-area-inset-bottom,5px)"},
+  side:{width:210,background:"rgba(246,249,242,0.98)",borderRight:"1px solid "+P.border,padding:"24px 12px",display:"flex",flexDirection:"column",gap:3,position:"fixed",top:0,left:0,bottom:0,zIndex:10,overflowY:"auto"},
+  mob:{display:"none",position:"fixed",bottom:0,left:0,right:0,background:"rgba(246,249,242,0.98)",borderTop:"1px solid "+P.border,zIndex:10,justifyContent:"space-around",padding:"6px 0 env(safe-area-inset-bottom,6px)"},
   main:{flex:1,marginLeft:210,padding:"32px 48px 80px",minHeight:"100vh",overflowY:"auto"},
   dday:{background:`linear-gradient(135deg,${P.greenBg} 0%,${P.blueBg} 30%,${P.periBg} 60%,${P.lavBg} 100%)`,borderRadius:28,padding:"56px 36px",textAlign:"center",border:"1px solid "+P.border,position:"relative",overflow:"hidden"},
-  card:{background:"#fff",borderRadius:20,padding:"24px 24px",border:"1px solid "+P.border,boxShadow:"0 2px 10px rgba(91,126,174,0.03)"},
+  card:{background:"#fff",borderRadius:20,padding:"24px 22px",border:"1px solid "+P.border,boxShadow:"0 2px 10px rgba(91,126,174,0.03)"},
   lnk:{background:"none",border:"none",color:P.periDk,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:FONT,padding:0},
   tab:{},th:{fontSize:26,fontWeight:700,color:P.periDk,margin:"0 0 22px"},
   ebtn:{background:P.periLt,border:"none",borderRadius:10,padding:"8px 16px",fontSize:14,fontWeight:600,color:P.periDk,cursor:"pointer",fontFamily:FONT},
   dbtn:{background:"none",border:"none",color:P.textMuted,fontSize:20,cursor:"pointer",padding:"2px 8px"},
   empty:{textAlign:"center",padding:"56px 20px",color:P.textMuted,fontSize:16,gridColumn:"1 / -1"},
+  calNav:{background:P.periLt,border:"none",borderRadius:12,width:44,height:44,fontSize:16,color:P.periDk,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700},
 };
 const fl=document.createElement("link");fl.rel="stylesheet";fl.href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css";document.head.appendChild(fl);
-const se=document.createElement("style");se.textContent='@media(max-width:768px){nav[style*="width: 210"]{display:none !important;}nav[style*="display: none"]{display:flex !important;}main[style*="margin-left: 210"]{margin-left:0 !important;padding:20px 16px 100px !important;}}input:focus,select:focus,textarea:focus{border-color:'+P.peri+' !important;box-shadow:0 0 0 3px rgba(146,173,216,0.15) !important;}button:hover{opacity:0.88;}*{-webkit-font-smoothing:antialiased;box-sizing:border-box;}';document.head.appendChild(se);
+const se=document.createElement("style");se.textContent=`
+@media(max-width:768px){
+  nav[style*="width: 210"]{display:none !important;}
+  nav[style*="display: none"]{display:flex !important;}
+  main[style*="margin-left: 210"]{margin-left:0 !important;padding:16px 16px 100px !important;}
+  .dday-num{font-size:56px !important;}
+  .couple-names>div>div:last-child{font-size:18px !important;}
+  .stat-grid{grid-template-columns:1fr !important;}
+  .budget-summary{grid-template-columns:1fr !important;}
+  .budget-num{font-size:22px !important;}
+  .vendor-grid{grid-template-columns:1fr !important;}
+  .modal-inner{padding:28px 20px !important;margin:8px;border-radius:20px !important;}
+}
+input:focus,select:focus,textarea:focus{border-color:${P.peri} !important;box-shadow:0 0 0 3px rgba(146,173,216,0.15) !important;}
+button:hover{opacity:0.88;}
+*{-webkit-font-smoothing:antialiased;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+button{min-height:44px;}
+`;document.head.appendChild(se);
