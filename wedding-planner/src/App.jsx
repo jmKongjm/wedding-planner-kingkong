@@ -165,14 +165,15 @@ function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(fal
     dress:{l:"👗 드레스샵 실장님",sys:CB_BASE+"\n\nsections:\n1. 선호 드레스 스타일 - 라인, 넥라인, 소매\n2. 소재 & 디테일\n3. 원하는 분위기 - 키워드\n4. 피하고 싶은 스타일 (파악안되면 가이드라인)\n5. 참고사항\n\nconcepts: 사진별로 드레스 스타일을 그룹핑\n- name: 드레스 스타일명 (예: 클래식 A라인, 슬립드레스)\n- photoIndices: 해당 스타일 사진번호\n- details: 해당 드레스의 특징 키워드"},
     makeup:{l:"💄 메이크업 아티스트님",sys:CB_BASE+"\n\nsections:\n1. 전체 무드 - 키워드\n2. 베이스 메이크업\n3. 아이 메이크업\n4. 립 & 치크\n5. 헤어 스타일\n6. 피하고 싶은 것 (파악안되면 가이드라인)\n\nconcepts: 사진별 메이크업 스타일 그룹핑\n- name: 메이크업 무드명\n- photoIndices: 해당 사진번호\n- details: 해당 메이크업 특징"}};
   const compressForAI=async(src)=>{return new Promise(r=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas");const max=400;let w=img.width,h=img.height;if(w>max){h=h*(max/w);w=max;}if(h>max){w=w*(max/h);h=max;}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);const d=c.toDataURL("image/jpeg",0.6);r(d.split(",")[1]);};img.onerror=()=>r(null);img.src=src;});};
-  const cbAnalyze=async()=>{const liked=photos.filter(p=>p.liked);if(liked.length===0)return;setCbStep("loading");try{const smallImgs=[];for(const p of liked.slice(0,4)){const b64=await compressForAI(p.src);if(b64)smallImgs.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}});}if(smallImgs.length===0){setCbStep("error");return;}const userMsg=[...smallImgs,{type:"text",text:"예비 신부의 메모/요청사항: "+(cbNotes||"특별한 요청 없음")+"\n\n위 레퍼런스 사진들을 분석하여 컨셉 보드를 JSON으로 작성해주세요. 한국어로 작성하세요."}];const body=JSON.stringify({system:CB_TYPES[cbRecip].sys,messages:[{role:"user",content:userMsg}]});
+  const cbLikedByType=(type)=>{return photos.filter(p=>{if(!p.liked)return false;const v=vendors.find(v=>v.id===p.vid);return v&&v.type===type;});};
+  const cbAnalyze=async()=>{const liked=cbLikedByType(cbRecip);if(liked.length===0){showT("해당 카테고리에 좋아요한 사진이 없어요");return;}setCbStep("loading");try{const smallImgs=[];for(const p of liked.slice(0,4)){const b64=await compressForAI(p.src);if(b64)smallImgs.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}});}if(smallImgs.length===0){setCbStep("error");return;}const userMsg=[...smallImgs,{type:"text",text:"예비 신부의 메모/요청사항: "+(cbNotes||"특별한 요청 없음")+"\n\n위 레퍼런스 사진들을 분석하여 컨셉 보드를 JSON으로 작성해주세요. 한국어로 작성하세요."}];const body=JSON.stringify({system:CB_TYPES[cbRecip].sys,messages:[{role:"user",content:userMsg}]});
     /* Try serverless function first (Vercel), fallback to direct API (Claude preview) */
     let res;try{res=await fetch("/api/concept-board",{method:"POST",headers:{"Content-Type":"application/json"},body});if(!res.ok)throw new Error("serverless "+res.status);}catch(e1){console.log("Serverless failed, trying direct API...",e1.message);res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,system:CB_TYPES[cbRecip].sys,messages:[{role:"user",content:userMsg}]})});}
     if(!res.ok){const errText=await res.text();console.error("API error:",res.status,errText);setCbStep("error");return;}const d=await res.json();console.log("API response:",d);const txt=d.content?.map(c=>c.text||"").join("")||"";let clean=txt.replace(/```json|```/g,"").trim();
     /* Robust JSON parsing: fix common issues */
     try{var parsed=JSON.parse(clean);}catch(e1){console.warn("JSON fix attempt...",e1.message);clean=clean.replace(/[\x00-\x1F]/g," ").replace(/,\s*}/g,"}").replace(/,\s*]/g,"]");try{parsed=JSON.parse(clean);}catch(e2){console.error("JSON parse failed:",e2,clean.slice(0,500));setCbStep("error");return;}}
     setCbResult(parsed);setCbStep("result");}catch(e){console.error("cbAnalyze error:",e);setCbStep("error");}};
-  const cbDownloadPPT=async()=>{if(!cbResult||typeof PptxGenJS==="undefined")return;const pptx=new PptxGenJS();pptx.defineLayout({name:"WIDE",width:13.33,height:7.5});pptx.layout="WIDE";const liked=photos.filter(p=>p.liked);
+  const cbDownloadPPT=async()=>{if(!cbResult||typeof PptxGenJS==="undefined")return;const pptx=new PptxGenJS();pptx.defineLayout({name:"WIDE",width:13.33,height:7.5});pptx.layout="WIDE";const liked=cbLikedByType(cbRecip);
     const C={bg:"F8FAF5",card:"FFFFFF",accent:"5B7EAE",accent2:"7BA23A",accent3:"B0A0CC",warm:"C62860",text:"3A3A50",sub:"8A8A9E",guideline:"6EC8E4"};
     const addBar=(sl,c)=>{sl.addShape(pptx.ShapeType.rect,{x:0,y:0,w:"100%",h:0.06,fill:{color:c||C.accent}});};
     const fmtTxt=(body,x,y,w,h,sl)=>{const lines=(body||"").split("\n");const runs=[];lines.forEach((ln,i)=>{if(i>0)runs.push({text:"\n",options:{fontSize:12}});const isGuide=ln.includes("[")||ln.includes("「");runs.push({text:ln,options:{fontSize:isGuide?11:12,fontFace:"Pretendard",color:isGuide?C.guideline:C.text,italic:isGuide}});});sl.addText(runs,{x,y,w,h,lineSpacingMultiple:1.55,valign:"top"});};
@@ -198,10 +199,15 @@ function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(fal
       s.addText(con.name,{x:0.5,y:0.7,w:12,h:0.6,fontSize:22,fontFace:"Pretendard",color:C.text,bold:true});
       /* Photos for this concept */
       const cPhotos=(con.photoIndices||[]).map(idx=>liked[idx]).filter(Boolean);const pCount=Math.min(cPhotos.length,3);
-      if(pCount>0){const pw=pCount===1?5:pCount===2?3.8:2.8;const ph=pCount===1?4.5:3.5;cPhotos.slice(0,3).forEach((p,i)=>{try{s.addImage({data:p.src,x:0.5+i*(pw+0.2),y:1.5,w:pw,h:ph,sizing:{type:"cover",w:pw,h:ph},rounding:true});}catch(e){}});}
-      /* Details card */
-      const detailX=pCount>0?0.5:0.5,detailY=pCount>0?(pCount===1?6.2:5.3):1.5,detailW=pCount>0?12.3:12.3,detailH=pCount>0?1.8:5.5;
-      if(con.details){s.addShape(pptx.ShapeType.rect,{x:detailX,y:detailY,w:detailW,h:detailH,fill:{color:cc+"10"},rectRadius:0.1});fmtTxt(con.details,detailX+0.3,detailY+0.15,detailW-0.6,detailH-0.3,s);}});
+      if(pCount>0&&pCount<=2){/* Photos left, details right */
+        const pw=pCount===1?4.5:3.2;cPhotos.slice(0,pCount).forEach((p,i)=>{try{s.addImage({data:p.src,x:0.5+i*(pw+0.2),y:1.5,w:pw,h:4.5,sizing:{type:"cover",w:pw,h:4.5},rounding:true});}catch(e){}});
+        if(con.details){const dx=pCount===1?5.5:7.0;s.addShape(pptx.ShapeType.rect,{x:dx,y:1.5,w:13.33-dx-0.5,h:5.5,fill:{color:"FFFFFF"},rectRadius:0.12,shadow:{type:"outer",blur:4,offset:2,color:"000000",opacity:0.05}});s.addShape(pptx.ShapeType.rect,{x:dx,y:1.5,w:0.08,h:5.5,fill:{color:cc}});fmtTxt(con.details,dx+0.4,1.7,13.33-dx-1.2,5.1,s);}
+      }else if(pCount===3){/* 3 photos top, details bottom */
+        const pw=3.8;cPhotos.slice(0,3).forEach((p,i)=>{try{s.addImage({data:p.src,x:0.5+i*(pw+0.2),y:1.5,w:pw,h:3.2,sizing:{type:"cover",w:pw,h:3.2},rounding:true});}catch(e){}});
+        if(con.details){s.addShape(pptx.ShapeType.rect,{x:0.5,y:5.1,w:12.3,h:2.0,fill:{color:"FFFFFF"},rectRadius:0.12,shadow:{type:"outer",blur:4,offset:2,color:"000000",opacity:0.05}});s.addShape(pptx.ShapeType.rect,{x:0.5,y:5.1,w:12.3,h:0.06,fill:{color:cc}});fmtTxt(con.details,0.8,5.3,11.7,1.7,s);}
+      }else{/* No photos, full details */
+        if(con.details){s.addShape(pptx.ShapeType.rect,{x:0.5,y:1.5,w:12.3,h:5.5,fill:{color:"FFFFFF"},rectRadius:0.12,shadow:{type:"outer",blur:4,offset:2,color:"000000",opacity:0.05}});s.addShape(pptx.ShapeType.rect,{x:0.5,y:1.5,w:0.08,h:5.5,fill:{color:cc}});fmtTxt(con.details,0.9,1.7,11.5,5.1,s);}
+      }});
 
     const fn=(cbResult.title||"concept-board").replace(/\s+/g,"_");pptx.writeFile({fileName:fn+".pptx"}).then(()=>showT("PPT 다운로드 완료!"));};
   const cbClose=()=>{setCbOpen(false);setCbStep("select");setCbResult(null);};
@@ -215,7 +221,7 @@ function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(fal
     <Modal title={cbStep==="result"?(cbResult?.title||"컨셉 보드"):"✨ 컨셉 보드 만들기"} open={cbOpen} onClose={cbClose}>
       {cbStep==="select"&&<><div style={{marginBottom:18}}><label style={S.lbl}>누구에게 보낼 컨셉 보드인가요?</label><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{Object.entries(CB_TYPES).map(([k,v])=><button key={k} onClick={()=>setCbRecip(k)} style={{padding:"10px 16px",borderRadius:12,border:"none",fontSize:14,fontWeight:cbRecip===k?700:500,background:cbRecip===k?P.periDk:P.periLt,color:cbRecip===k?"#fff":P.periDk,cursor:"pointer",fontFamily:FONT}}>{v.l}</button>)}</div></div>
         <div style={{marginBottom:18}}><label style={S.lbl}>원하는 스타일이나 요청사항</label><textarea style={{...MI,minHeight:80,resize:"vertical"}} placeholder={"자유롭게 적어주세요!\n예: 깔끔하고 자연스러운 분위기, 초록들판+꽃밭 컨셉 원해요, 노란 드레스 포함, 풍선 소품 사용하고 싶어요\n\n비워두셔도 괜찮아요 — 사진만으로도 분석해드려요!"} value={cbNotes} onChange={e=>setCbNotes(e.target.value)}/></div>
-        <div style={{marginBottom:18,padding:"14px 16px",background:P.greenBg,borderRadius:12}}><div style={{fontSize:13,fontWeight:600,color:P.greenDk,marginBottom:6}}>포함될 사진 {likedCount}장</div><div style={{display:"flex",gap:4,overflowX:"auto"}}>{photos.filter(p=>p.liked).slice(0,6).map(p=><div key={p.id} style={{width:48,height:48,borderRadius:8,overflow:"hidden",flexShrink:0}}><img src={p.src} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/></div>)}</div>{likedCount>4&&<div style={{fontSize:11,color:P.textMuted,marginTop:4}}>최대 4장까지 AI 분석에 포함돼요</div>}</div>
+        {(()=>{const cbPhotos=cbLikedByType(cbRecip);return<div style={{marginBottom:18,padding:"14px 16px",background:cbPhotos.length>0?P.greenBg:"#FFF3E0",borderRadius:12}}><div style={{fontSize:13,fontWeight:600,color:cbPhotos.length>0?P.greenDk:"#E65100",marginBottom:6}}>{cbPhotos.length>0?"포함될 "+CB_TYPES[cbRecip].l+" 사진 "+cbPhotos.length+"장":"⚠️ "+CB_TYPES[cbRecip].l+" 카테고리에 좋아요한 사진이 없어요"}</div>{cbPhotos.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto"}}>{cbPhotos.slice(0,6).map(p=><div key={p.id} style={{width:48,height:48,borderRadius:8,overflow:"hidden",flexShrink:0}}><img src={p.src} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/></div>)}</div>}{cbPhotos.length>4&&<div style={{fontSize:11,color:P.textMuted,marginTop:4}}>최대 4장까지 AI 분석에 포함돼요</div>}{cbPhotos.length===0&&<div style={{fontSize:12,color:P.textSub,marginTop:4}}>스드메 탭에서 해당 카테고리 업체의 사진에 좋아요를 눌러주세요</div>}</div>;})()}
         <button style={{...S.btn,width:"100%"}} onClick={cbAnalyze}>🤖 AI 분석 시작</button></>}
       {cbStep==="loading"&&<div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:36,marginBottom:12}}>🤖</div><div style={{fontSize:16,fontWeight:600,color:P.periDk,marginBottom:8}}>사진을 분석하고 있어요...</div><div style={{fontSize:14,color:P.textSub}}>30초~1분 정도 걸릴 수 있어요</div></div>}
       {cbStep==="error"&&<div style={{textAlign:"center",padding:"30px 20px"}}><div style={{fontSize:15,color:"#D32F2F",marginBottom:12}}>분석 중 오류가 발생했어요.</div><div style={{fontSize:13,color:P.textSub,marginBottom:16}}>사진 크기가 크거나 네트워크 문제일 수 있어요.<br/>좋아요 사진 수를 줄이고 다시 시도해보세요.</div><button style={{...S.btn}} onClick={()=>setCbStep("select")}>다시 시도</button></div>}
@@ -223,7 +229,7 @@ function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(fal
         {(cbResult.sections||[]).map((sec,i)=><div key={i} style={{marginBottom:14,padding:"14px 16px",background:P.greenBg,borderRadius:12}}><div style={{fontSize:14,fontWeight:700,color:P.periDk,marginBottom:6}}>{sec.heading}</div><div style={{fontSize:14,color:P.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{(sec.body||"").split("\n").map((line,j)=><div key={j} style={line.includes("[")||line.includes("「")?{color:P.blueDk,fontStyle:"italic",background:P.blueLt,padding:"4px 8px",borderRadius:6,marginTop:4,fontSize:13}:{}}>{line}</div>)}</div></div>)}
         {/* Concepts with photos */}
         {(cbResult.concepts||[]).length>0&&<div style={{fontSize:14,fontWeight:700,color:P.periDk,marginBottom:10,marginTop:6}}>📸 촬영 컨셉별 정리</div>}
-        {(cbResult.concepts||[]).map((con,ci)=>{const cPhotos=(con.photoIndices||[]).map(idx=>(photos.filter(p=>p.liked))[idx]).filter(Boolean);return<div key={ci} style={{marginBottom:16,padding:"14px 16px",background:"#fff",borderRadius:14,border:"2px solid "+P.periLt}}>
+        {(cbResult.concepts||[]).map((con,ci)=>{const cLiked=cbLikedByType(cbRecip);const cPhotos=(con.photoIndices||[]).map(idx=>cLiked[idx]).filter(Boolean);return<div key={ci} style={{marginBottom:16,padding:"14px 16px",background:"#fff",borderRadius:14,border:"2px solid "+P.periLt}}>
           <div style={{fontSize:15,fontWeight:700,color:P.periDk,marginBottom:8}}>컨셉 {ci+1}. {con.name}</div>
           {cPhotos.length>0&&<div style={{display:"flex",gap:6,overflowX:"auto",marginBottom:10}}>{cPhotos.map((p,i)=><div key={i} style={{width:80,height:80,borderRadius:10,overflow:"hidden",flexShrink:0}}><img src={p.src} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/></div>)}</div>}
           <div style={{fontSize:13,color:P.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{(con.details||"").split("\n").map((line,j)=><div key={j} style={line.includes("[")||line.includes("「")?{color:P.blueDk,fontStyle:"italic",fontSize:12}:{}}>{line}</div>)}</div>
@@ -290,6 +296,70 @@ function ContactsTab({data,setData}){const[show,setShow]=useState(false);const[e
 function SetTab({data,setData,coupleKey,onLogout,onRefresh}){const[f,setF]=useState({groomName:data.groomName,brideName:data.brideName,weddingDate:data.weddingDate,weddingTime:data.weddingTime});const[saved,setSaved]=useState(false);const save=()=>{const m={};data.checklist.forEach(p=>p.items.forEach(i=>{m[i.id]={done:i.done,memo:i.memo||"",custom:i.custom,text:i.text,cat:i.cat,customCatName:i.customCatName,note:i.note};}));const nc=JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:m[i.id]?.done||false,memo:m[i.id]?.memo||""}))}));data.checklist.forEach((p,pi)=>{p.items.forEach(i=>{if(i.custom&&nc[pi])nc[pi].items.push(i);});});setData({...data,...f,checklist:nc});setSaved(true);setTimeout(()=>setSaved(false),2000);};
   return<div style={S.tab}><h2 style={S.th}>⚙️ 설정</h2><div style={S.card}><div style={{fontSize:14,color:P.textSub,marginBottom:20}}>커플 키: <b style={{color:P.periDk}}>{coupleKey}</b> · ☁️</div><div style={{display:"flex",flexDirection:"column",gap:14,maxWidth:420}}><div><label style={S.lbl}>신랑</label><input style={MI} value={f.groomName} onChange={e=>setF({...f,groomName:e.target.value})}/></div><div><label style={S.lbl}>신부</label><input style={MI} value={f.brideName} onChange={e=>setF({...f,brideName:e.target.value})}/></div><div><label style={S.lbl}>결혼 예정일</label><input type="date" style={MI} value={f.weddingDate} onChange={e=>setF({...f,weddingDate:e.target.value})}/><p style={{fontSize:11,color:P.textMuted,margin:"4px 0 0"}}>변경하면 체크리스트 기한이 준비기간 비율에 맞게 자동 재계산돼요</p></div><div><label style={S.lbl}>예식 시간</label><input type="time" style={MI} value={f.weddingTime} onChange={e=>setF({...f,weddingTime:e.target.value})}/></div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button style={S.btn} onClick={save}>{saved?"✓ 저장!":"저장"}</button><button style={{padding:"12px 18px",background:P.blueLt,color:P.blueDk,border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={onRefresh}>🔄 새로고침</button><button style={{padding:"12px 18px",background:"#F0F0F0",color:P.textSub,border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={onLogout}>로그아웃</button></div></div></div></div>;}
 
+/* ═══ AI CHATBOT — tab-aware floating assistant ═══ */
+const CHAT_CTX={
+  dashboard:{welcome:"결혼 준비 전반에 대해 궁금한 걸 물어보세요!",suggestions:["결혼 준비 어디서부터 시작해요?","플래너 필요한가요?","성수기 vs 비수기 차이는?","결혼 비용 평균이 얼마예요?"]},
+  checklist:{welcome:"체크리스트에 대해 궁금한 걸 물어보세요!",suggestions:["지금 단계에서 가장 급한 건?","스드메 계약 시 주의할 점?","드레스투어 팁 알려주세요","촬영 준비물 뭐가 필요해요?"]},
+  sdm:{welcome:"스드메 비교·선택에 대해 물어보세요!",suggestions:["스튜디오 선택 기준이 뭐예요?","드레스 투어 몇 곳이 적당해요?","메이크업 리허설 꼭 해야 해요?","야외스냅 vs 스튜디오 장단점?"]},
+  budget:{welcome:"예산·견적에 대해 궁금한 걸 물어보세요!",suggestions:["스드메 평균 비용이 얼마예요?","웨딩홀 견적 볼 때 주의할 점?","숨은 비용 뭐가 있어요?","예산 절약 팁 알려주세요"]},
+  schedule:{welcome:"일정 관리에 대해 물어보세요!",suggestions:["촬영 적정 시기가 언제예요?","청첩장 언제 보내야 해요?","상견례 준비 어떻게 해요?","식전 영상 언제까지 준비해요?"]},
+  contacts:{welcome:"업체 소통에 대해 물어보세요!",suggestions:["업체에 첫 연락 어떻게 해요?","견적 요청 시 뭘 물어봐야 해요?","계약 전 확인할 사항은?","업체 변경은 가능한가요?"]},
+  settings:{welcome:"앱 사용법에 대해 물어보세요!",suggestions:["커플 키 잊어버리면 어떡해요?","데이터 백업은 어떻게 돼요?","공유 링크는 어떻게 쓰나요?"]}
+};
+
+function ChatBot({tab,data}){
+  const[open,setOpen]=useState(false);const[msgs,setMsgs]=useState([]);const[input,setInput]=useState("");const[loading,setLoading]=useState(false);const scrollRef=useRef(null);
+  const ctx=CHAT_CTX[tab]||CHAT_CTX.dashboard;
+
+  const buildSystem=()=>{let sys="당신은 친절하고 전문적인 웨딩 상담사입니다. 한국 결혼 준비에 대해 실용적인 조언을 해주세요.\n\n규칙:\n- 답변은 짧고 핵심적으로 (3~5문장)\n- 구체적인 숫자나 기간을 포함\n- 친근하지만 전문적인 톤\n- 모르는 건 솔직히 '전문가와 상담하세요'라고 안내";
+    if(data?.weddingDate)sys+="\n\n이 커플의 정보:\n- 결혼 예정일: "+data.weddingDate+"\n- 신랑: "+(data.groomName||"미정")+", 신부: "+(data.brideName||"미정");
+    if(tab==="checklist"&&data?.checklist){const cur=data.checklist.find(p=>phaseStatus(p,data.weddingDate)==="current");if(cur)sys+="\n- 현재 단계: "+cur.label+" ("+phaseLabel(cur,data.weddingDate)+")\n- 미완료 항목: "+cur.items.filter(i=>!i.done).map(i=>i.text).join(", ");}
+    if(tab==="budget"&&data?.budget){const t=data.budget.reduce((s,b)=>s+b.amount,0),p=data.budget.reduce((s,b)=>s+(b.paid||0),0);sys+="\n- 총 예산: "+t.toLocaleString()+"원, 지출: "+p.toLocaleString()+"원\n- 등록 항목: "+data.budget.map(b=>b.name+"("+b.amount.toLocaleString()+"원)").join(", ");}
+    if(tab==="sdm"){const v=(data?.sdmVendors||[]).map(v=>v.name+"("+({studio:"스튜디오",dress:"드레스",makeup:"메이크업"}[v.type]||"")+")").join(", ");if(v)sys+="\n- 등록된 스드메 업체: "+v;}
+    return sys;};
+
+  const send=async(text)=>{if(!text.trim()||loading)return;const userMsg={role:"user",content:text};const newMsgs=[...msgs,userMsg];setMsgs(newMsgs);setInput("");setLoading(true);
+    try{const body=JSON.stringify({system:buildSystem(),messages:newMsgs.map(m=>({role:m.role,content:m.content}))});
+      let res;try{res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body});if(!res.ok)throw new Error("serverless");}catch{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01"},body});}
+      if(res.ok){const d=await res.json();const reply=d.content?.map(c=>c.text||"").join("")||"답변을 생성하지 못했어요.";setMsgs([...newMsgs,{role:"assistant",content:reply}]);}else{setMsgs([...newMsgs,{role:"assistant",content:"죄송해요, 일시적인 오류가 발생했어요. 다시 질문해주세요!"}]);}
+    }catch(e){console.error("Chat error:",e);setMsgs([...newMsgs,{role:"assistant",content:"네트워크 오류가 발생했어요. 다시 시도해주세요."}]);}setLoading(false);};
+
+  useEffect(()=>{if(scrollRef.current)scrollRef.current.scrollTop=scrollRef.current.scrollHeight;},[msgs,loading]);
+  useEffect(()=>{setMsgs([]);},[tab]);
+
+  return<>
+    {/* Floating button */}
+    <button onClick={()=>setOpen(!open)} style={{position:"fixed",bottom:open?undefined:80,right:16,width:52,height:52,borderRadius:26,background:`linear-gradient(135deg,${P.peri},${P.blue})`,color:"#fff",border:"none",fontSize:24,cursor:"pointer",boxShadow:"0 4px 16px rgba(91,126,174,0.3)",zIndex:90,display:open?"none":"flex",alignItems:"center",justifyContent:"center"}}>💬</button>
+
+    {/* Chat panel */}
+    {open&&<div style={{position:"fixed",bottom:0,left:0,right:0,top:0,zIndex:95,display:"flex",flexDirection:"column",background:"rgba(40,50,70,0.3)",backdropFilter:"blur(4px)"}} onClick={()=>setOpen(false)}>
+      <div style={{flex:1}} />
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",maxHeight:"75vh",display:"flex",flexDirection:"column",boxShadow:"0 -8px 32px rgba(60,80,120,0.12)"}}>
+        {/* Header */}
+        <div style={{padding:"16px 20px",borderBottom:"1px solid "+P.border,display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+          <div><div style={{fontSize:16,fontWeight:700,color:P.periDk}}>🤖 AI 웨딩 상담</div><div style={{fontSize:12,color:P.textMuted,marginTop:2}}>{ctx.welcome}</div></div>
+          <button onClick={()=>setOpen(false)} style={{background:P.periLt,border:"none",width:34,height:34,borderRadius:10,fontSize:15,color:P.periDk,cursor:"pointer"}}>✕</button>
+        </div>
+
+        {/* Messages */}
+        <div ref={scrollRef} style={{flex:1,overflowY:"auto",padding:"16px 20px",minHeight:200,maxHeight:"50vh"}}>
+          {msgs.length===0&&<div style={{display:"flex",flexDirection:"column",gap:8}}>{ctx.suggestions.map((q,i)=><button key={i} onClick={()=>send(q)} style={{padding:"10px 14px",background:P.greenBg,border:"1px solid "+P.border,borderRadius:12,fontSize:13,color:P.text,cursor:"pointer",fontFamily:FONT,textAlign:"left"}}>{q}</button>)}</div>}
+          {msgs.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:10}}>
+            <div style={{maxWidth:"85%",padding:"10px 14px",borderRadius:m.role==="user"?"14px 14px 4px 14px":"14px 14px 14px 4px",background:m.role==="user"?`linear-gradient(135deg,${P.peri},${P.blue})`:P.greenBg,color:m.role==="user"?"#fff":P.text,fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m.content}</div>
+          </div>)}
+          {loading&&<div style={{display:"flex",justifyContent:"flex-start",marginBottom:10}}><div style={{padding:"10px 14px",borderRadius:"14px 14px 14px 4px",background:P.greenBg,fontSize:14,color:P.textMuted}}>답변 작성 중...</div></div>}
+        </div>
+
+        {/* Input */}
+        <div style={{padding:"12px 16px",borderTop:"1px solid "+P.border,display:"flex",gap:8,flexShrink:0}}>
+          <input style={{...MI,flex:1,fontSize:14,padding:"10px 14px"}} placeholder="궁금한 걸 물어보세요..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input);}}}/>
+          <button onClick={()=>send(input)} disabled={loading||!input.trim()} style={{padding:"10px 18px",background:loading||!input.trim()?"#E0E0E0":`linear-gradient(135deg,${P.peri},${P.blue})`,color:loading||!input.trim()?P.textMuted:"#fff",border:"none",borderRadius:11,fontSize:14,fontWeight:700,cursor:loading?"default":"pointer",fontFamily:FONT,flexShrink:0}}>전송</button>
+        </div>
+      </div>
+    </div>}
+  </>;
+}
+
 /* ═══ MAIN ═══ */
 const TABS=[{id:"dashboard",l:"홈",i:"🏡"},{id:"checklist",l:"체크리스트",i:"🌿"},{id:"sdm",l:"스드메",i:"💐"},{id:"budget",l:"예산",i:"🌻"},{id:"schedule",l:"일정",i:"📅"},{id:"contacts",l:"연락처",i:"📞"},{id:"settings",l:"설정",i:"⚙️"}];
 
@@ -315,7 +385,7 @@ export default function App(){const[ck,setCk]=useState(null);const[data,setDR]=u
       {tab==="contacts"&&<ContactsTab data={data} setData={setData}/>}
       {tab==="settings"&&<SetTab data={data} setData={setData} coupleKey={ck} onLogout={onLogout} onRefresh={onRefresh}/>}
     </main>
-  </div><Toast {...toast}/></>;
+  </div><ChatBot tab={tab} data={data}/><Toast {...toast}/></>;
 }
 
 const S={wrap:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(150deg,${P.greenBg} 0%,${P.blueBg} 30%,${P.periBg} 60%,${P.lavBg} 100%)`,padding:12,fontFamily:FONT,position:"relative",overflow:"hidden"},lc:{background:"rgba(255,255,255,0.92)",borderRadius:24,padding:"36px 30px",maxWidth:400,width:"100%",boxShadow:"0 20px 56px rgba(91,126,174,0.08)",textAlign:"center",backdropFilter:"blur(12px)",position:"relative",zIndex:2},lbl:{fontSize:13,fontWeight:600,color:"#4A4A5A",display:"block",marginBottom:5},btn:{padding:"13px 24px",background:`linear-gradient(135deg,${P.peri},${P.blue})`,color:"#fff",border:"none",borderRadius:12,fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:FONT,boxShadow:"0 4px 12px rgba(110,200,228,0.2)"},app:{display:"flex",minHeight:"100vh",background:P.bg,fontFamily:FONT},side:{width:200,background:"rgba(246,249,242,0.98)",borderRight:"1px solid "+P.border,padding:"20px 10px",display:"flex",flexDirection:"column",gap:2,position:"fixed",top:0,left:0,bottom:0,zIndex:10,overflowY:"auto"},mob:{display:"none",position:"fixed",bottom:0,left:0,right:0,background:"rgba(246,249,242,0.98)",borderTop:"1px solid "+P.border,zIndex:10,justifyContent:"space-around",padding:"4px 0 env(safe-area-inset-bottom,4px)"},main:{flex:1,marginLeft:200,padding:"24px 36px 80px",minHeight:"100vh",overflowY:"auto"},dday:{background:`linear-gradient(135deg,${P.greenBg} 0%,${P.blueBg} 30%,${P.periBg} 60%,${P.lavBg} 100%)`,borderRadius:24,padding:"44px 28px",textAlign:"center",border:"1px solid "+P.border,position:"relative",overflow:"hidden"},card:{background:"#fff",borderRadius:18,padding:"20px 20px",border:"1px solid "+P.border,boxShadow:"0 2px 8px rgba(91,126,174,0.03)"},lnk:{background:"none",border:"none",color:P.periDk,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:FONT,padding:0},tab:{},th:{fontSize:24,fontWeight:700,color:P.periDk,margin:"0 0 20px"},ebtn:{background:P.periLt,border:"none",borderRadius:9,padding:"7px 14px",fontSize:13,fontWeight:600,color:P.periDk,cursor:"pointer",fontFamily:FONT},dbtn:{background:"none",border:"none",color:P.textMuted,fontSize:17,cursor:"pointer",padding:"2px 6px"},empty:{textAlign:"center",padding:"44px 16px",color:P.textMuted,fontSize:14,gridColumn:"1 / -1"},calNav:{background:P.periLt,border:"none",borderRadius:10,width:40,height:40,fontSize:15,color:P.periDk,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}};
