@@ -151,29 +151,57 @@ function SetupScreen({data,setData,onBack}){const[f,setF]=useState({groomName:""
 function Dash({data,setTab}){const dd=getDday(data.weddingDate),tot=data.checklist.reduce((s,p)=>s+p.items.length,0),dn=data.checklist.reduce((s,p)=>s+p.items.filter(i=>i.done).length,0),pct=tot>0?Math.round(dn/tot*100):0;const bT=data.budget.reduce((s,b)=>s+(b.unitPrice||0)*(b.qty||0),0),bP=data.budget.reduce((s,b)=>s+(b.paid||0),0);const cur=data.checklist.find(p=>phaseStatus(p,data.weddingDate)==="current")||data.checklist.find(p=>phaseStatus(p,data.weddingDate)==="upcoming");const todo=cur?cur.items.filter(i=>!i.done):[];const tips=cTips(data.checklist,data.weddingDate);const upcoming=(data.keyDates||[]).filter(d=>new Date(d.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);const[tipOpen,setTipOpen]=useState(true);
   return<div style={{display:"flex",flexDirection:"column",gap:18}}>
     <div style={S.dday}><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/><div style={{position:"relative",zIndex:1}}>
-      {/* Couple illustration with motto */}
-      {data.motto&&<div style={{position:"relative",marginBottom:16,padding:"0 10px"}}>
-        <svg viewBox="0 0 400 100" style={{width:"100%",maxWidth:420,margin:"0 auto",display:"block"}} xmlns="http://www.w3.org/2000/svg">
-          {/* Left silhouette (신랑 쪽, looking right) */}
-          <g opacity="0.3">
-            <path d="M52 80 C46 78 38 72 36 62 C34 52 37 44 42 37 C47 30 53 26 58 25 C63 24 67 26 69 30 C71 34 71 40 69 47 C67 53 63 60 60 66 C57 72 54 77 52 80Z" fill="none" stroke={P.peri} strokeWidth="1.6" strokeLinecap="round"/>
-            <path d="M42 37 C38 30 37 20 43 14 C49 8 58 9 63 14 C66 17 67 22 66 26" fill="none" stroke={P.peri} strokeWidth="1.4" strokeLinecap="round"/>
-            <circle cx="56" cy="42" r="1.3" fill={P.peri}/>
-            <path d="M52 52 C54 53.5 57 53.5 59 52" fill="none" stroke={P.peri} strokeWidth="1" strokeLinecap="round"/>
+      {/* Couple line art illustration with motto */}
+      {data.motto&&<div style={{position:"relative",marginBottom:18}}>
+        <svg viewBox="0 0 440 170" style={{width:"100%",maxWidth:500,margin:"0 auto",display:"block"}} xmlns="http://www.w3.org/2000/svg">
+          {/* Left person (looking right) — continuous line art, upper body */}
+          <g fill="none" stroke={P.periDk} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.4">
+            {/* Body/shoulder flowing up to neck */}
+            <path d="M30 165 C30 165 45 155 60 140 C70 130 75 118 78 108 C80 100 82 92 85 86"/>
+            {/* Neck to chin to face contour */}
+            <path d="M85 86 C87 80 90 74 94 68 C98 62 103 57 108 54 C113 51 118 50 122 52 C126 54 128 58 128 63"/>
+            {/* Nose */}
+            <path d="M128 63 C128 68 126 72 124 75 C122 78 120 79 118 78"/>
+            {/* Upper lip to chin */}
+            <path d="M118 78 C116 80 112 83 110 86 C108 90 108 94 112 96"/>
+            {/* Chin back to ear area */}
+            <path d="M112 96 C116 98 122 98 128 94 C132 90 134 84 134 78"/>
+            {/* Ear hint */}
+            <path d="M134 78 C136 74 138 70 136 66 C134 64 132 65 132 68"/>
+            {/* Forehead and head top */}
+            <path d="M128 52 C126 44 120 36 112 32 C104 28 94 30 88 36 C82 42 80 50 82 58"/>
+            {/* Hair line flowing */}
+            <path d="M88 36 C84 32 78 30 74 34 C70 38 72 46 78 50"/>
           </g>
-          {/* Right silhouette (신부 쪽, looking left — mirrored) */}
-          <g opacity="0.3">
-            <path d="M348 80 C354 78 362 72 364 62 C366 52 363 44 358 37 C353 30 347 26 342 25 C337 24 333 26 331 30 C329 34 329 40 331 47 C333 53 337 60 340 66 C343 72 346 77 348 80Z" fill="none" stroke={P.blue} strokeWidth="1.6" strokeLinecap="round"/>
-            <path d="M358 37 C362 30 363 20 357 14 C351 8 342 9 337 14 C334 17 333 22 334 26" fill="none" stroke={P.blue} strokeWidth="1.4" strokeLinecap="round"/>
-            <circle cx="344" cy="42" r="1.3" fill={P.blue}/>
-            <path d="M348 52 C346 53.5 343 53.5 341 52" fill="none" stroke={P.blue} strokeWidth="1" strokeLinecap="round"/>
+          {/* Right person (looking left) — mirrored continuous line art */}
+          <g fill="none" stroke={P.periDk} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.4">
+            {/* Body/shoulder */}
+            <path d="M410 165 C410 165 395 155 380 140 C370 130 365 118 362 108 C360 100 358 92 355 86"/>
+            {/* Neck to face */}
+            <path d="M355 86 C353 80 350 74 346 68 C342 62 337 57 332 54 C327 51 322 50 318 52 C314 54 312 58 312 63"/>
+            {/* Nose */}
+            <path d="M312 63 C312 68 314 72 316 75 C318 78 320 79 322 78"/>
+            {/* Upper lip to chin */}
+            <path d="M322 78 C324 80 328 83 330 86 C332 90 332 94 328 96"/>
+            {/* Chin back */}
+            <path d="M328 96 C324 98 318 98 312 94 C308 90 306 84 306 78"/>
+            {/* Ear hint */}
+            <path d="M306 78 C304 74 302 70 304 66 C306 64 308 65 308 68"/>
+            {/* Forehead and head */}
+            <path d="M312 52 C314 44 320 36 328 32 C336 28 346 30 352 36 C358 42 360 50 358 58"/>
+            {/* Hair line */}
+            <path d="M352 36 C356 32 362 30 366 34 C370 38 368 46 362 50"/>
           </g>
-          {/* Center speech bubble */}
-          <path d="M110 22 C110 12 130 6 200 6 C270 6 290 12 290 22 L290 68 C290 78 270 84 200 84 C130 84 110 78 110 68Z" fill="white" fillOpacity="0.55" stroke={P.peri} strokeWidth="0.7" strokeOpacity="0.25"/>
-          <path d="M128 48 L108 54 L128 58" fill="white" fillOpacity="0.5" stroke={P.peri} strokeWidth="0.5" strokeOpacity="0.2"/>
-          <path d="M272 48 L292 54 L272 58" fill="white" fillOpacity="0.5" stroke={P.blue} strokeWidth="0.5" strokeOpacity="0.2"/>
+          {/* Speech bubbles — two overlapping, organic */}
+          <g fill="none" strokeWidth="1.4" strokeLinecap="round" opacity="0.3">
+            {/* Left speech bubble */}
+            <path d="M115 40 C115 22 140 10 175 10 C210 10 230 18 232 30 C234 42 218 52 190 54 C175 55 160 52 150 48 L130 58 L140 48 C125 46 115 44 115 40Z" stroke={P.periDk} fill="white" fillOpacity="0.4"/>
+            {/* Right speech bubble */}
+            <path d="M325 40 C325 22 300 10 265 10 C230 10 210 18 208 30 C206 42 222 52 250 54 C265 55 280 52 290 48 L310 58 L300 48 C315 46 325 44 325 40Z" stroke={P.periDk} fill="white" fillOpacity="0.4"/>
+          </g>
         </svg>
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%, -50%)",width:"52%",textAlign:"center"}}><div style={{fontSize:15,color:P.periDk,fontWeight:600,lineHeight:1.6}}>{data.motto}</div></div>
+        {/* Motto text centered over the overlapping bubble area */}
+        <div style={{position:"absolute",top:"8%",left:"50%",transform:"translateX(-50%)",width:"38%",textAlign:"center"}}><div style={{fontSize:14,color:P.periDk,fontWeight:600,lineHeight:1.6,letterSpacing:0.3}}>{data.motto}</div></div>
       </div>}
       <div style={{fontSize:11,fontWeight:600,color:P.periDk,letterSpacing:3,marginBottom:12,opacity:0.5}}>OUR WEDDING</div><div className="couple-row" style={{display:"flex",justifyContent:"center",gap:28,marginBottom:14}}><div style={{textAlign:"center"}}><div style={{fontSize:11,color:P.blueDk,fontWeight:600,marginBottom:3}}>신랑</div><div className="couple-name" style={{fontSize:20,fontWeight:700,color:P.periDk}}>{data.groomName}</div></div><div style={{fontSize:24,color:P.lav,alignSelf:"center"}}>♥</div><div style={{textAlign:"center"}}><div style={{fontSize:11,color:P.blueDk,fontWeight:600,marginBottom:3}}>신부</div><div className="couple-name" style={{fontSize:20,fontWeight:700,color:P.periDk}}>{data.brideName}</div></div></div><div className="dday-num" style={{fontSize:64,fontWeight:800,color:P.periDk,lineHeight:1,opacity:0.8}}>{dd>0?"D-"+dd:dd===0?"D-Day 🎉":"D+"+Math.abs(dd)}</div><div style={{fontSize:15,color:P.blueDk,marginTop:12}}>{fmtDate(data.weddingDate)} {data.weddingTime}</div></div></div>
     <div className="stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}><div onClick={()=>setTab("checklist")} style={{...S.card,background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`,cursor:"pointer"}}><div style={{fontSize:12,fontWeight:700,color:P.greenDk,marginBottom:12}}>📊 진행률</div><div style={{height:10,background:"rgba(255,255,255,0.6)",borderRadius:5,overflow:"hidden",marginBottom:12}}><div style={{height:"100%",background:`linear-gradient(90deg,${P.green},${P.blue})`,borderRadius:5,width:pct+"%"}}/></div><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:32,fontWeight:800,color:P.greenDk}}>{pct}%</span><span style={{fontSize:14,color:P.greenDk,opacity:0.7,alignSelf:"flex-end"}}>{dn}/{tot}</span></div></div><div onClick={()=>setTab("budget")} style={{...S.card,background:`linear-gradient(135deg,${P.lavBg},${P.lavLt})`,cursor:"pointer"}}><div style={{fontSize:12,fontWeight:700,color:P.lavDk,marginBottom:12}}>💰 예산</div><div className="budget-main" style={{fontSize:24,fontWeight:800,color:P.lavDk,marginBottom:4}}>{fmtW(bT)}</div><div style={{fontSize:13,color:P.lav}}>지출 {fmtW(bP)}</div><div style={{fontSize:13,color:P.greenDk,fontWeight:700}}>잔여 {fmtW(bT-bP)}</div></div></div>
