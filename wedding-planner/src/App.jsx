@@ -152,11 +152,13 @@ function SetupScreen({data,setData,onBack}){const[f,setF]=useState({groomName:""
 function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data.checklist.reduce((s,p)=>s+p.items.length,0),dn=data.checklist.reduce((s,p)=>s+p.items.filter(i=>i.done).length,0),pct=tot>0?Math.round(dn/tot*100):0;const bT=data.budget.reduce((s,b)=>s+(b.unitPrice||0)*(b.qty||0),0),bP=data.budget.reduce((s,b)=>s+(b.paid||0),0);const cur=data.checklist.find(p=>phaseStatus(p,data.weddingDate)==="current")||data.checklist.find(p=>phaseStatus(p,data.weddingDate)==="upcoming");const todo=cur?cur.items.filter(i=>!i.done):[];const tips=cTips(data.checklist,data.weddingDate);const upcoming=(data.keyDates||[]).filter(d=>new Date(d.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);const[tipOpen,setTipOpen]=useState(true);
   /* D-1 Reminders */
   const dismissed=data.dismissedReminders||[];
-  const d1Reminders=(data.keyDates||[]).filter(d=>{if(!d.remind)return false;if(dismissed.includes(d.id))return false;const dday=getDday(d.date);return dday===1;});
+  const[sessionDismissed,setSessionDismissed]=useState([]);
+  const d1Reminders=(data.keyDates||[]).filter(d=>{if(!d.remind)return false;if(dismissed.includes(d.id))return false;if(sessionDismissed.includes(d.id))return false;const dday=getDday(d.date);return dday===1;});
+  const confirmReminder=(id)=>{setSessionDismissed([...sessionDismissed,id]);};
   const dismissReminder=(id)=>{setData({...data,dismissedReminders:[...dismissed,id]});};
   return<div style={{display:"flex",flexDirection:"column",gap:18}}>
     {/* D-1 Reminder Modal Popup */}
-    {d1Reminders.length>0&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.35)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}} onClick={()=>dismissReminder(d1Reminders[0].id)}>
+    {d1Reminders.length>0&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.35)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}} onClick={()=>confirmReminder(d1Reminders[0].id)}>
       <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:24,padding:"36px 28px",maxWidth:380,width:"100%",textAlign:"center",boxShadow:"0 20px 56px rgba(60,80,120,0.15)",position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,height:6,background:`linear-gradient(90deg,${P.peri},${P.blue},${P.lav})`}}/>
         <div style={{fontSize:48,marginBottom:8}}>🔔</div>
@@ -166,7 +168,7 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
         <div style={{fontSize:15,color:P.periDk}}>{fmtDate(d1Reminders[0].date)}{d1Reminders[0].time?" · "+d1Reminders[0].time:""}</div>
         {d1Reminders[0].memo&&<div style={{fontSize:14,color:P.textSub,marginTop:8,padding:"8px 14px",background:P.greenBg,borderRadius:10}}>📝 {d1Reminders[0].memo}</div>}
         {d1Reminders.length>1&&<div style={{fontSize:13,color:P.textMuted,marginTop:10}}>외 {d1Reminders.length-1}건의 알림이 더 있어요</div>}
-        <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"center"}}><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 24px",background:`linear-gradient(135deg,${P.peri},${P.blue})`,color:"#fff",border:"none",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:FONT}}>확인했어요</button><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 20px",background:P.periLt,color:P.periDk,border:"none",borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT}}>다시 보지 않기</button></div>
+        <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"center"}}><button onClick={()=>confirmReminder(d1Reminders[0].id)} style={{padding:"12px 24px",background:`linear-gradient(135deg,${P.peri},${P.blue})`,color:"#fff",border:"none",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:FONT}}>확인했어요</button><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 20px",background:P.periLt,color:P.periDk,border:"none",borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT}}>다시 보지 않기</button></div>
       </div>
     </div>}
     <div style={S.dday}><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/><div style={{position:"relative",zIndex:1}}>
