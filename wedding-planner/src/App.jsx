@@ -155,15 +155,20 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
   const d1Reminders=(data.keyDates||[]).filter(d=>{if(!d.remind)return false;if(dismissed.includes(d.id))return false;const dday=getDday(d.date);return dday===1;});
   const dismissReminder=(id)=>{setData({...data,dismissedReminders:[...dismissed,id]});};
   return<div style={{display:"flex",flexDirection:"column",gap:18}}>
-    {/* D-1 Reminder Popup */}
-    {d1Reminders.map(r=><div key={r.id} style={{background:`linear-gradient(135deg,${P.lavBg},${P.blueBg})`,borderRadius:20,padding:"24px 20px",textAlign:"center",border:"2px solid "+P.lav+"40",position:"relative",overflow:"hidden"}}>
-      <div style={{fontSize:13,color:P.lavDk,fontWeight:600,letterSpacing:2,marginBottom:6}}>🔔 D-1 알림</div>
-      <div style={{fontSize:40,fontWeight:800,color:P.periDk,lineHeight:1,marginBottom:8}}>D-1</div>
-      <div style={{fontSize:17,fontWeight:700,color:P.text,marginBottom:4}}>{r.name}</div>
-      <div style={{fontSize:14,color:P.periDk,marginBottom:2}}>{fmtDate(r.date)}{r.time?" "+r.time:""}</div>
-      {r.memo&&<div style={{fontSize:13,color:P.textSub,marginTop:4}}>📝 {r.memo}</div>}
-      <button onClick={()=>dismissReminder(r.id)} style={{marginTop:14,padding:"8px 18px",background:"rgba(255,255,255,0.7)",border:"1px solid "+P.border,borderRadius:10,fontSize:12,color:P.textSub,cursor:"pointer",fontFamily:FONT}}>다시 보지 않기</button>
-    </div>)}
+    {/* D-1 Reminder Modal Popup */}
+    {d1Reminders.length>0&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.35)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}} onClick={()=>dismissReminder(d1Reminders[0].id)}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:24,padding:"36px 28px",maxWidth:380,width:"100%",textAlign:"center",boxShadow:"0 20px 56px rgba(60,80,120,0.15)",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:6,background:`linear-gradient(90deg,${P.peri},${P.blue},${P.lav})`}}/>
+        <div style={{fontSize:48,marginBottom:8}}>🔔</div>
+        <div style={{fontSize:13,color:P.lavDk,fontWeight:600,letterSpacing:2,marginBottom:8}}>내일 일정이 있어요!</div>
+        <div style={{fontSize:48,fontWeight:800,color:P.periDk,lineHeight:1,marginBottom:12}}>D-1</div>
+        <div style={{fontSize:20,fontWeight:700,color:P.text,marginBottom:6}}>{d1Reminders[0].name}</div>
+        <div style={{fontSize:15,color:P.periDk}}>{fmtDate(d1Reminders[0].date)}{d1Reminders[0].time?" · "+d1Reminders[0].time:""}</div>
+        {d1Reminders[0].memo&&<div style={{fontSize:14,color:P.textSub,marginTop:8,padding:"8px 14px",background:P.greenBg,borderRadius:10}}>📝 {d1Reminders[0].memo}</div>}
+        {d1Reminders.length>1&&<div style={{fontSize:13,color:P.textMuted,marginTop:10}}>외 {d1Reminders.length-1}건의 알림이 더 있어요</div>}
+        <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"center"}}><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 24px",background:`linear-gradient(135deg,${P.peri},${P.blue})`,color:"#fff",border:"none",borderRadius:12,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:FONT}}>확인했어요</button><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 20px",background:P.periLt,color:P.periDk,border:"none",borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT}}>다시 보지 않기</button></div>
+      </div>
+    </div>}
     <div style={S.dday}><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/><div style={{position:"relative",zIndex:1}}>
       {/* Couple heart line art — content sits inside */}
       {data.motto?<div style={{position:"relative",textAlign:"center"}}>
