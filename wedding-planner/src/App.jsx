@@ -128,7 +128,15 @@ function fmtDate(d){if(!d)return"";const o=new Date(d),w=["일","월","화","수
 function fmtW(n){return n.toLocaleString("ko-KR")+"원";}
 /* Simple markdown: **bold**, *italic*, \n */
 function MdText({text,style}){const parts=[];let rest=text;while(rest.length>0){const bi=rest.indexOf("**");if(bi===-1){parts.push(rest);break;}parts.push(rest.slice(0,bi));rest=rest.slice(bi+2);const ei=rest.indexOf("**");if(ei===-1){parts.push("**"+rest);break;}parts.push(<strong key={parts.length}>{rest.slice(0,ei)}</strong>);rest=rest.slice(ei+2);}return<span style={style}>{parts}</span>;}
-function cTips(cl,wd){const idx=cl.findIndex(p=>phaseStatus(p,wd)==="current");const i=idx>=0?idx:cl.findIndex(p=>phaseStatus(p,wd)==="upcoming");if(i<0)return["🎉 모든 준비 완료!"];const all=(TIPS_BY_PHASE[i]||"💡 차근차근 준비해보세요").split("|");if(all.length<=3)return all;const shuffled=[...all].sort(()=>Math.random()-0.5);return shuffled.slice(0,3);}
+function cTips(cl,wd){const idx=cl.findIndex(p=>phaseStatus(p,wd)==="current");const i=idx>=0?idx:cl.findIndex(p=>phaseStatus(p,wd)==="upcoming");if(i<0)return["🎉 모든 준비 완료!"];
+  const curPhase=cl[i];const curDone=curPhase.items.every(it=>it.done);const curAll=(TIPS_BY_PHASE[i]||"").split("|").filter(Boolean);
+  /* If current phase all done, mix in next phase tips */
+  let pool=[...curAll];
+  if(curDone&&i+1<cl.length){const nextAll=(TIPS_BY_PHASE[i+1]||"").split("|").filter(Boolean);pool=[...nextAll,...curAll];}
+  else if(!curDone){const remaining=curPhase.items.filter(it=>!it.done).length;const total=curPhase.items.length;if(remaining<=Math.ceil(total*0.3)&&i+1<cl.length){const nextAll=(TIPS_BY_PHASE[i+1]||"").split("|").filter(Boolean);pool=[...curAll,...nextAll.slice(0,2)];}}
+  if(pool.length===0)pool=["💡 차근차근 준비해보세요"];
+  if(pool.length<=3)return pool;
+  const shuffled=[...pool].sort(()=>Math.random()-0.5);return shuffled.slice(0,3);}
 function Bg({cat,cn}){const c=CAT[cat];if(c)return<span style={{padding:"4px 10px",borderRadius:8,fontSize:11,fontWeight:600,background:c.bg,color:c.fg,whiteSpace:"nowrap"}}>{c.ic} {c.n}</span>;return<span style={{padding:"4px 10px",borderRadius:8,fontSize:11,fontWeight:600,background:P.blueLt,color:P.blueDk,whiteSpace:"nowrap"}}>✏️ {cn||"기타"}</span>;}
 
 function Modal({title,open,onClose,children}){if(!open)return null;return<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.3)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:12,backdropFilter:"blur(4px)"}} onClick={onClose}><div className="modal-inner" style={{background:"#fff",borderRadius:22,padding:"28px 24px",maxWidth:500,width:"100%",boxShadow:"0 20px 56px rgba(60,80,120,0.12)",maxHeight:"92vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h3 style={{fontSize:19,fontWeight:700,color:P.text,margin:0}}>{title}</h3><button onClick={onClose} style={{background:P.periLt,border:"none",width:38,height:38,borderRadius:10,fontSize:17,color:P.periDk,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{children}</div></div>;}
@@ -176,7 +184,8 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
   const dismissReminder=(id)=>{setData({...data,dismissedReminders:[...dismissed,id]});};
   const[guideOpen,setGuideOpen]=useState(false);
   const curPhaseIdx=data.checklist.findIndex(p=>phaseStatus(p,data.weddingDate)==="current");
-  const showPhotoGuide=curPhaseIdx>=2&&curPhaseIdx<=3;
+  const curPhaseDone=curPhaseIdx>=0&&data.checklist[curPhaseIdx].items.every(it=>it.done);
+  const showPhotoGuide=(curPhaseIdx>=2&&curPhaseIdx<=3)||(curPhaseIdx===1&&curPhaseDone);
   return<div style={{display:"flex",flexDirection:"column",gap:18}}>
     {/* D-1 Reminder Modal Popup */}
     {d1Reminders.length>0&&<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(40,50,70,0.35)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16,backdropFilter:"blur(4px)"}} onClick={()=>confirmReminder(d1Reminders[0].id)}>
