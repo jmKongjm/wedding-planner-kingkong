@@ -13,7 +13,7 @@ const THEMES={
   garden:{name:"소프트 가든",emoji:"🌿",green:"#B5D580",greenDk:"#7BA23A",greenLt:"#E8F2D6",greenBg:"#F4F9EC",blue:"#6EC8E4",blueDk:"#3A8EB0",blueLt:"#D6EEF6",blueBg:"#EDF7FB",peri:"#92ADD8",periDk:"#5B7EAE",periLt:"#DDE6F2",periBg:"#EEF2F8",lav:"#B0A0CC",lavDk:"#7B6B9E",lavLt:"#E4DFF0",lavBg:"#F2F0F7",text:"#3A3A50",textSub:"#7A7A8E",textMuted:"#A8A8BC",bg:"#F6F9F2",border:"#E2EAD8"},
   spring:{name:"봄빛 로맨스",emoji:"🌸",green:"#F0B8C8",greenDk:"#C07090",greenLt:"#FDE8F0",greenBg:"#FFF5F8",blue:"#E88878",blueDk:"#C06050",blueLt:"#FCD8D0",blueBg:"#FFF0EC",peri:"#5090D0",periDk:"#2868A8",periLt:"#D8E8F8",periBg:"#ECF2FA",lav:"#E0C858",lavDk:"#B8A030",lavLt:"#F8F0D0",lavBg:"#FCFAED",text:"#4A3040",textSub:"#8A707E",textMuted:"#B8A0AC",bg:"#FFF8F5",border:"#F0D8D0"},
   autumn:{name:"가을 엘레강스",emoji:"🍂",green:"#E0C080",greenDk:"#B09050",greenLt:"#F8F0D8",greenBg:"#FDF8F0",blue:"#C87050",blueDk:"#A05838",blueLt:"#F0D8C8",blueBg:"#FBF0E8",peri:"#884060",periDk:"#682848",periLt:"#F0D0E0",periBg:"#F8ECF0",lav:"#583068",lavDk:"#402050",lavLt:"#E8D8F0",lavBg:"#F5F0F8",text:"#3A2828",textSub:"#7A6060",textMuted:"#A89090",bg:"#FBF8F0",border:"#E8D8C8"},
-  noir:{name:"어반 로프트",emoji:"🖤",green:"#C4A898",greenDk:"#A35E47",greenLt:"#F0E4DE",greenBg:"#F8F2EE",blue:"#9C9A9A",blueDk:"#464646",blueLt:"#E0DEDE",blueBg:"#EEECEC",peri:"#A35E47",periDk:"#1A1818",periLt:"#E8D8D0",periBg:"#F2EEEA",lav:"#7A6858",lavDk:"#464646",lavLt:"#D8D0C8",lavBg:"#EAE6E2",text:"#1A1818",textSub:"#5C5656",textMuted:"#9C9A9A",bg:"#F5F3F0",border:"#D1D0D0"}
+  noir:{name:"어반 로프트",emoji:"🖤",green:"#C08060",greenDk:"#A35E47",greenLt:"#F2E4DA",greenBg:"#FAF4EE",blue:"#9C9A9A",blueDk:"#464646",blueLt:"#E8E6E6",blueBg:"#F2F0F0",peri:"#B86E50",periDk:"#A35E47",periLt:"#F0DCD2",periBg:"#F8F0EA",lav:"#8A6850",lavDk:"#5C4E4E",lavLt:"#E0D2C8",lavBg:"#F0E8E2",text:"#1A1818",textSub:"#5C5252",textMuted:"#9C9A9A",bg:"#F8F5F2",border:"#D8D2CC"}
 };
 let P=THEMES.garden;
 
@@ -23,73 +23,73 @@ function Fl2({s}){return<svg viewBox="0 0 100 60" style={{position:"absolute",op
 /* ═══ DYNAMIC CHECKLIST: "결혼 N개월 전" 역산 ═══ */
 const CL_TEMPLATE=[
   {mbStart:14,mbEnd:10,label:"준비 시작",emoji:"🌱",items:[
+    {id:"s09",text:"상견례 장소 예약",cat:"family"},
     {id:"s01",text:"웨딩 플래너 상담 후 결정",cat:"planner"},
     {id:"s02",text:"웨딩홀 투어 (3곳 이상 비교)",cat:"venue"},
     {id:"s03",text:"웨딩홀 계약",cat:"venue"},
     {id:"s04",text:"스드메 업체 비교·예약",cat:"photo"},
     {id:"s05",text:"본식 스냅/DVD 업체 결정",cat:"photo"},
-    {id:"s06",text:"허니문 행선지 알아보기",cat:"honeymoon"},
-    {id:"s07",text:"허니문 예약",cat:"honeymoon"},
     {id:"s08",text:"예물 반지 디자인 알아보기",cat:"shopping"},
-    {id:"s09",text:"상견례 장소 예약",cat:"family"}
+    {id:"s06",text:"허니문 행선지 알아보기",cat:"honeymoon"},
+    {id:"s07",text:"허니문 예약",cat:"honeymoon"}
   ]},
   {mbStart:10,mbEnd:8,label:"의상 준비",emoji:"👗",items:[
     {id:"d01",text:"드레스 투어 (3곳 이상)",cat:"dress"},
     {id:"d02",text:"드레스샵 결정·계약",cat:"dress"},
     {id:"d03",text:"예복(턱시도) 샵 알아보기",cat:"shopping"},
     {id:"d04",text:"예복 디자인 선택·맞춤 시작",cat:"shopping"},
-    {id:"d05",text:"예물 반지 디자인 확정·제작 의뢰",cat:"shopping"},
     {id:"d06",text:"한복 알아보기 (맞춤/대여)",cat:"shopping"},
-    {id:"d07",text:"혼수 품목 리스트 작성",cat:"shopping"},
-    {id:"d08",text:"혼주 메이크업 예약",cat:"makeup"}
+    {id:"d05",text:"예물 반지 디자인 확정·제작 의뢰",cat:"shopping"},
+    {id:"d08",text:"혼주 메이크업 예약",cat:"makeup"},
+    {id:"d07",text:"혼수 품목 리스트 작성",cat:"shopping"}
   ]},
   {mbStart:8,mbEnd:6,label:"촬영 준비",emoji:"📸",items:[
+    {id:"p07",text:"웨딩 관리 시작 (피부·등·팔라인)",cat:"etc"},
     {id:"p01",text:"촬영가봉 (드레스 셀렉·사이즈 피팅)",cat:"dress"},
     {id:"p02",text:"예복 1차 가봉",cat:"shopping"},
-    {id:"p03",text:"촬영 컨셉·레퍼런스 사진 준비",cat:"photo"},
-    {id:"p04",text:"촬영 소품 준비 (커플룩, 소품 등)",cat:"photo"},
-    {id:"p05",text:"예물 반지 수령",cat:"shopping"},
     {id:"p06",text:"한복 셀렉 / 1차 가봉",cat:"shopping"},
-    {id:"p07",text:"웨딩 관리 시작 (피부·등·팔라인)",cat:"etc"}
+    {id:"p05",text:"예물 반지 수령",cat:"shopping"},
+    {id:"p03",text:"촬영 컨셉·레퍼런스 사진 준비",cat:"photo"},
+    {id:"p04",text:"촬영 소품 준비 (커플룩, 소품 등)",cat:"photo"}
   ]},
   {mbStart:6,mbEnd:4,label:"스튜디오 촬영",emoji:"💛",items:[
-    {id:"ph01",text:"촬영 전 준비물 체크 (속옷, 간식, 커플룩 등)",cat:"photo"},
     {id:"ph02",text:"예복 2차 가봉·수령",cat:"shopping"},
-    {id:"ph03",text:"스튜디오 웨딩 촬영",cat:"photo"},
-    {id:"ph04",text:"한복 2차 가봉·수령",cat:"shopping"}
+    {id:"ph04",text:"한복 2차 가봉·수령",cat:"shopping"},
+    {id:"ph01",text:"촬영 전 준비물 체크 (속옷, 간식, 커플룩 등)",cat:"photo"},
+    {id:"ph03",text:"스튜디오 웨딩 촬영",cat:"photo"}
   ]},
   {mbStart:4,mbEnd:3,label:"셀렉 & 청첩장",emoji:"🖼️",items:[
     {id:"sl01",text:"촬영 사진 셀렉",cat:"photo"},
     {id:"sl02",text:"앨범·액자 사진 선택",cat:"photo"},
+    {id:"sl05",text:"생화부케 상담·예약",cat:"flower"},
     {id:"sl03",text:"모바일 청첩장 제작",cat:"etc"},
-    {id:"sl04",text:"모바일 청첩장 발송",cat:"etc"},
-    {id:"sl05",text:"생화부케 상담·예약",cat:"flower"}
+    {id:"sl04",text:"모바일 청첩장 발송",cat:"etc"}
   ]},
   {mbStart:3,mbEnd:1,label:"막바지 준비",emoji:"🏡",items:[
     {id:"f01",text:"신혼집 구하기·계약",cat:"etc"},
     {id:"f02",text:"가전·가구 준비",cat:"shopping"},
-    {id:"f03",text:"혼수 입주",cat:"shopping"},
+    {id:"f08",text:"하객 명단 정리 (참석 여부 확인)",cat:"ceremony"},
     {id:"f04",text:"주례/사회 섭외",cat:"ceremony"},
     {id:"f05",text:"축가 부탁",cat:"ceremony"},
     {id:"f06",text:"접수대 담당 섭외",cat:"ceremony"},
+    {id:"f10",text:"혼주 의상 준비 (한복/정장)",cat:"family"},
     {id:"f07",text:"폐백 여부 결정",cat:"ceremony"},
-    {id:"f08",text:"하객 명단 정리 (참석 여부 확인)",cat:"ceremony"},
     {id:"f09",text:"답례품 준비",cat:"ceremony"},
-    {id:"f10",text:"혼주 의상 준비 (한복/정장)",cat:"family"}
+    {id:"f03",text:"혼수 입주",cat:"shopping"}
   ]},
   {mbStart:2,mbEnd:0,label:"본식 준비 & 마무리",emoji:"✨",items:[
     {id:"b01",text:"본식 드레스 가봉·셀렉",cat:"dress"},
     {id:"b02",text:"2부 의상 준비",cat:"dress"},
+    {id:"b05",text:"혼주 확인 / 예단 전달",cat:"family"},
     {id:"b03",text:"종이 청첩장 제작·발송",cat:"etc"},
     {id:"b04",text:"수정본·액자 수령",cat:"photo"},
-    {id:"b05",text:"혼주 확인 / 예단 전달",cat:"family"},
     {id:"b06",text:"식순표 작성·사회자 공유",cat:"ceremony"},
     {id:"b07",text:"식전영상·MR 음원 준비 (USB)",cat:"ceremony"},
     {id:"b08",text:"본식 부케 셀렉",cat:"flower"},
     {id:"b09",text:"포토테이블 사진 준비",cat:"ceremony"},
     {id:"b10",text:"식권 준비",cat:"ceremony"},
-    {id:"b11",text:"비상키트 준비 (바늘, 밴드, 양면테이프 등)",cat:"ceremony"},
-    {id:"b12",text:"축의금 봉투·장갑 준비",cat:"ceremony"}
+    {id:"b12",text:"축의금 봉투·장갑 준비",cat:"ceremony"},
+    {id:"b11",text:"비상키트 준비 (바늘, 밴드, 양면테이프 등)",cat:"ceremony"}
   ]},
   {mbStart:0,mbEnd:0,label:"웨딩데이",emoji:"💍",items:[{id:"w01",text:"웨딩데이 ♥",cat:"ceremony"}]},
 ];
