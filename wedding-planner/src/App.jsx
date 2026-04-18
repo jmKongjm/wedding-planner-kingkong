@@ -12,7 +12,8 @@ function dlCSV(fn,hd,rows){const B="\uFEFF",esc=c=>'"'+String(c==null?"":c).repl
 const THEMES={
   garden:{name:"소프트 가든",emoji:"🌿",green:"#B5D580",greenDk:"#7BA23A",greenLt:"#E8F2D6",greenBg:"#F4F9EC",blue:"#6EC8E4",blueDk:"#3A8EB0",blueLt:"#D6EEF6",blueBg:"#EDF7FB",peri:"#92ADD8",periDk:"#5B7EAE",periLt:"#DDE6F2",periBg:"#EEF2F8",lav:"#B0A0CC",lavDk:"#7B6B9E",lavLt:"#E4DFF0",lavBg:"#F2F0F7",text:"#3A3A50",textSub:"#7A7A8E",textMuted:"#A8A8BC",bg:"#F6F9F2",border:"#E2EAD8"},
   spring:{name:"봄빛 로맨스",emoji:"🌸",green:"#F0B8C8",greenDk:"#C07090",greenLt:"#FDE8F0",greenBg:"#FFF5F8",blue:"#E88878",blueDk:"#C06050",blueLt:"#FCD8D0",blueBg:"#FFF0EC",peri:"#5090D0",periDk:"#2868A8",periLt:"#D8E8F8",periBg:"#ECF2FA",lav:"#E0C858",lavDk:"#B8A030",lavLt:"#F8F0D0",lavBg:"#FCFAED",text:"#4A3040",textSub:"#8A707E",textMuted:"#B8A0AC",bg:"#FFF8F5",border:"#F0D8D0"},
-  autumn:{name:"가을 엘레강스",emoji:"🍂",green:"#E0C080",greenDk:"#B09050",greenLt:"#F8F0D8",greenBg:"#FDF8F0",blue:"#C87050",blueDk:"#A05838",blueLt:"#F0D8C8",blueBg:"#FBF0E8",peri:"#884060",periDk:"#682848",periLt:"#F0D0E0",periBg:"#F8ECF0",lav:"#583068",lavDk:"#402050",lavLt:"#E8D8F0",lavBg:"#F5F0F8",text:"#3A2828",textSub:"#7A6060",textMuted:"#A89090",bg:"#FBF8F0",border:"#E8D8C8"}
+  autumn:{name:"가을 엘레강스",emoji:"🍂",green:"#E0C080",greenDk:"#B09050",greenLt:"#F8F0D8",greenBg:"#FDF8F0",blue:"#C87050",blueDk:"#A05838",blueLt:"#F0D8C8",blueBg:"#FBF0E8",peri:"#884060",periDk:"#682848",periLt:"#F0D0E0",periBg:"#F8ECF0",lav:"#583068",lavDk:"#402050",lavLt:"#E8D8F0",lavBg:"#F5F0F8",text:"#3A2828",textSub:"#7A6060",textMuted:"#A89090",bg:"#FBF8F0",border:"#E8D8C8"},
+  noir:{name:"고딕 누아르",emoji:"🖤",green:"#B0A098",greenDk:"#7A6E68",greenLt:"#E8E2DE",greenBg:"#F2EEEC",blue:"#988686",blueDk:"#5C4E4E",blueLt:"#E0D6D6",blueBg:"#F0EAEA",peri:"#8A7A7A",periDk:"#3A2E2E",periLt:"#D8D0D0",periBg:"#ECEAE8",lav:"#706060",lavDk:"#4A3E3E",lavLt:"#D0C8C8",lavBg:"#E8E4E4",text:"#1A1616",textSub:"#5C5252",textMuted:"#8A8080",bg:"#F5F2F0",border:"#D1D0D0"}
 };
 let P=THEMES.garden;
 
@@ -292,8 +293,9 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
           <button key={t.k} onClick={()=>setDashTab(t.k)} style={{flex:1,padding:"9px 0",border:"none",borderRadius:8,fontSize:13,fontWeight:dashTab===t.k?700:500,background:dashTab===t.k?"#fff":"transparent",color:dashTab===t.k?P.periDk:P.textSub,cursor:"pointer",fontFamily:FONT,boxShadow:dashTab===t.k?"0 1px 4px rgba(0,0,0,0.06)":"none",transition:"all 0.2s"}}>{t.l}</button>
         )}
       </div>
-      {/* 📊 현황 탭 */}
+      {/* 현황 탭 */}
       {dashTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{fontSize:12,color:P.textSub,lineHeight:1.5,padding:"0 2px",marginBottom:2}}>진행률과 예산, 다음 할 일을 한눈에 확인하세요</div>
         <div className="stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           <div onClick={()=>setTab("checklist")} style={{padding:"16px 14px",borderRadius:14,background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`,cursor:"pointer"}}>
             <div style={{fontSize:11,fontWeight:700,color:P.greenDk,marginBottom:10}}>진행률</div>
@@ -314,8 +316,9 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
           {todo.length>4&&<div style={{fontSize:12,color:P.textMuted,textAlign:"center",marginTop:4}}>외 {todo.length-4}개</div>}
         </div>
       </div>}
-      {/* 📅 일정 탭 */}
+      {/* 일정 탭 */}
       {dashTab==="schedule"&&<div>
+        <div style={{fontSize:12,color:P.textSub,lineHeight:1.5,marginBottom:10}}>다가오는 웨딩 일정을 확인하세요</div>
         {upcoming.length===0&&<div style={{textAlign:"center",padding:"30px 16px",color:P.textMuted,fontSize:14}}>등록된 일정이 없어요</div>}
         {upcoming.map((d,i)=>{const udd=getDday(d.date);return<div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,marginBottom:8,background:i===0?`linear-gradient(135deg,${P.peri}15,${P.blue}10)`:P.greenBg}}>
           <div style={{width:48,height:48,borderRadius:12,background:i===0?`linear-gradient(135deg,${P.peri},${P.blue})`:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0,border:i===0?"none":"1px solid "+P.border}}>
@@ -327,9 +330,29 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
         {upcoming.length>0&&<button onClick={()=>setTab("schedule")} style={{width:"100%",padding:"10px",background:"none",border:"1px solid "+P.border,borderRadius:10,fontSize:13,fontWeight:600,color:P.periDk,cursor:"pointer",fontFamily:FONT,marginTop:4}}>전체 일정 보기 →</button>}
       </div>}
       {/* 💡 가이드 탭 */}
+      {/* 가이드 탭 */}
       {dashTab==="guide"&&<div>
-        {tips.map((t,i)=><div key={i} className="tip-text" style={{fontSize:14,color:P.text,lineHeight:1.8,padding:"6px 0",borderBottom:i<tips.length-1?"1px solid "+P.border+"40":"none"}}>{t}</div>)}
-        {showPhotoGuide&&<button onClick={()=>setGuideOpen(true)} style={{marginTop:12,padding:"10px 16px",background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`,border:"1px solid "+P.blue+"30",borderRadius:10,fontSize:13,fontWeight:600,color:P.blueDk,cursor:"pointer",fontFamily:FONT,width:"100%"}}>📋 촬영 준비 가이드 보기</button>}
+        <div style={{fontSize:12,color:P.textSub,lineHeight:1.5,marginBottom:10}}>현재 단계에 맞는 웨딩 준비 가이드예요</div>
+        {(()=>{
+          const catMap={venue:{label:"웨딩홀·예식장",color:"#D4A017",bg:"#FFF8E1",icon:"M3 21V8l9-5 9 5v13H3zm2-2h14V9.2L12 5.1 5 9.2V19zm3-2h2v-4h4v4h2v-6l-5-3-5 3v6z"},
+            dress:{label:"드레스·의상",color:"#C62860",bg:"#FCE4EC",icon:"M12 2C9 2 7 4 7 4l-3 6h4l-2 10h12L16 10h4l-3-6s-2-2-5-2z"},
+            photo:{label:"촬영·스튜디오",color:P.greenDk,bg:P.greenLt,icon:"M12 9a3 3 0 100 6 3 3 0 000-6zm8-3h-3.2L15 4H9L7.2 6H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2z"},
+            shopping:{label:"예물·혼수",color:"#C8960A",bg:"#FFF8E1",icon:"M7 18a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM1 2h3.3l.9 2H21l-3 9H7L5.2 4H1zm6 12h10l1-3H6l1 3z"},
+            budget:{label:"예산·비용",color:P.lavDk,bg:P.lavLt,icon:"M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 17h-2v-2h2v2zm0-4h-2V7h2v8z"},
+            prep:{label:"준비·기타",color:P.blueDk,bg:P.blueLt,icon:"M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"}};
+          const detect=(t)=>{if(/웨딩홀|예식장|보증인원|식대/.test(t))return"venue";if(/드레스|가봉|예복|턱시도|한복|혼수/.test(t))return"dress";if(/촬영|사진|메이크업|부케|앨범|스튜디오|컨셉|소품|피부|관리|렌즈/.test(t))return"photo";if(/예물|반지|가전|가구|입주/.test(t))return"shopping";if(/예산|비용|견적|예비비/.test(t))return"budget";return"prep";};
+          const grouped={};tips.forEach(t=>{const c=detect(t);if(!grouped[c])grouped[c]=[];grouped[c].push(t);});
+          return<>{Object.entries(grouped).map(([k,items])=>{const cat=catMap[k]||catMap.prep;return<div key={k} style={{marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+              <div style={{width:28,height:28,borderRadius:8,background:cat.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={cat.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={cat.icon}/></svg></div>
+              <span style={{fontSize:13,fontWeight:700,color:cat.color}}>{cat.label}</span>
+            </div>
+            {items.map((t,i)=><div key={i} className="tip-text" style={{fontSize:13,color:P.text,lineHeight:1.7,padding:"6px 0 6px 36px",borderBottom:"1px solid "+P.border+"30"}}>{t}</div>)}
+          </div>;})}
+          {showPhotoGuide&&<button onClick={()=>setGuideOpen(true)} style={{marginTop:8,padding:"10px 16px",background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`,border:"1px solid "+P.blue+"30",borderRadius:10,fontSize:13,fontWeight:600,color:P.blueDk,cursor:"pointer",fontFamily:FONT,width:"100%"}}>촬영 준비 가이드 보기</button>}
+          <div style={{marginTop:12,padding:"10px 14px",background:P.periLt,borderRadius:10,textAlign:"center"}}><span style={{fontSize:13,color:P.periDk,fontWeight:600}}>더 궁금한 점이 있다면 오른쪽 하단 AI 챗봇에게 물어보세요</span></div>
+          </>;
+        })()}
       </div>}
     </div>
     {/* Photography Guide Overlay */}
