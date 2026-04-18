@@ -21,13 +21,75 @@ function Fl2({s}){return<svg viewBox="0 0 100 60" style={{position:"absolute",op
 
 /* ═══ DYNAMIC CHECKLIST: "결혼 N개월 전" 역산 ═══ */
 const CL_TEMPLATE=[
-  {mbStart:14,mbEnd:10,label:"준비 시작",emoji:"🌱",items:[{id:"s01",text:"플래너 결정",cat:"planner"},{id:"s02",text:"웨딩홀 투어 후 결정",cat:"venue"},{id:"s03",text:"스드메 예약 (스튜디오·드레스·메이크업)",cat:"photo"},{id:"s04",text:"혼주 메이크업 예약",cat:"makeup"},{id:"s05",text:"본식 스냅/DVD 결정",cat:"photo"},{id:"s06",text:"허니문 예약",cat:"honeymoon"},{id:"s07",text:"결혼반지(예물) 준비",cat:"shopping"},{id:"s08",text:"예복(턱시도) 알아보기",cat:"shopping"}]},
-  {mbStart:10,mbEnd:8,label:"드레스투어 & 혼수",emoji:"👗",items:[{id:"d01",text:"드레스투어 후 샵 결정",cat:"dress"},{id:"d02",text:"혼수품목 준비",cat:"shopping"},{id:"d03",text:"예복 가봉",cat:"shopping"},{id:"d04",text:"예물 디자인 셀렉·제작",cat:"shopping"},{id:"d05",text:"한복 셀렉/가봉",cat:"shopping"}]},
-  {mbStart:8,mbEnd:6,label:"촬영 준비",emoji:"📸",items:[{id:"p01",text:"촬영가봉 (드레스 셀렉)",cat:"dress"},{id:"p02",text:"촬영 소품·컨셉 준비",cat:"photo"},{id:"p03",text:"생화부케 예약",cat:"flower"},{id:"p04",text:"신랑 예복 디자인 확정",cat:"shopping"}]},
-  {mbStart:6,mbEnd:4,label:"스튜디오 촬영",emoji:"💛",items:[{id:"ph01",text:"스튜디오 웨딩 촬영",cat:"photo"},{id:"ph02",text:"헬퍼이모님 확인",cat:"photo"}]},
-  {mbStart:4,mbEnd:3,label:"셀렉 & 청첩장",emoji:"🖼️",items:[{id:"sl01",text:"앨범/액자 사진 셀렉",cat:"photo"},{id:"sl02",text:"모바일 청첩장 제작·발송",cat:"etc"}]},
-  {mbStart:3,mbEnd:1,label:"막바지 준비",emoji:"🏡",items:[{id:"f01",text:"신혼집 구하기",cat:"etc"},{id:"f02",text:"가전·가구 준비",cat:"shopping"},{id:"f03",text:"주례/사회/축가 섭외",cat:"ceremony"},{id:"f04",text:"접수대 섭외",cat:"ceremony"},{id:"f05",text:"폐백 여부 결정",cat:"ceremony"},{id:"f06",text:"2부 의상 준비",cat:"dress"},{id:"f07",text:"혼주 한복·정장",cat:"family"},{id:"f08",text:"하객 명단 정리",cat:"ceremony"}]},
-  {mbStart:2,mbEnd:0,label:"본식 가봉 & 마무리",emoji:"✨",items:[{id:"b01",text:"본식 드레스 셀렉",cat:"dress"},{id:"b02",text:"원본사진 셀렉",cat:"photo"},{id:"b03",text:"종이 청첩장 발송",cat:"etc"},{id:"b04",text:"수정본·액자 수령",cat:"photo"},{id:"b05",text:"혼주 확인/예단",cat:"family"},{id:"b06",text:"식순·MR·식전영상 준비",cat:"ceremony"},{id:"b07",text:"부케 셀렉",cat:"flower"},{id:"b08",text:"식권·포토테이블 준비",cat:"ceremony"},{id:"b09",text:"비상키트 준비",cat:"ceremony"}]},
+  {mbStart:14,mbEnd:10,label:"준비 시작",emoji:"🌱",items:[
+    {id:"s01",text:"웨딩 플래너 상담 후 결정",cat:"planner"},
+    {id:"s02",text:"웨딩홀 투어 (3곳 이상 비교)",cat:"venue"},
+    {id:"s03",text:"웨딩홀 계약",cat:"venue"},
+    {id:"s04",text:"스드메 업체 비교·예약",cat:"photo"},
+    {id:"s05",text:"본식 스냅/DVD 업체 결정",cat:"photo"},
+    {id:"s06",text:"허니문 행선지 알아보기",cat:"honeymoon"},
+    {id:"s07",text:"허니문 예약",cat:"honeymoon"},
+    {id:"s08",text:"예물 반지 디자인 알아보기",cat:"shopping"},
+    {id:"s09",text:"상견례 장소 예약",cat:"family"}
+  ]},
+  {mbStart:10,mbEnd:8,label:"의상 준비",emoji:"👗",items:[
+    {id:"d01",text:"드레스 투어 (3곳 이상)",cat:"dress"},
+    {id:"d02",text:"드레스샵 결정·계약",cat:"dress"},
+    {id:"d03",text:"예복(턱시도) 샵 알아보기",cat:"shopping"},
+    {id:"d04",text:"예복 디자인 선택·맞춤 시작",cat:"shopping"},
+    {id:"d05",text:"예물 반지 디자인 확정·제작 의뢰",cat:"shopping"},
+    {id:"d06",text:"한복 알아보기 (맞춤/대여)",cat:"shopping"},
+    {id:"d07",text:"혼수 품목 리스트 작성",cat:"shopping"},
+    {id:"d08",text:"혼주 메이크업 예약",cat:"makeup"}
+  ]},
+  {mbStart:8,mbEnd:6,label:"촬영 준비",emoji:"📸",items:[
+    {id:"p01",text:"촬영가봉 (드레스 셀렉·사이즈 피팅)",cat:"dress"},
+    {id:"p02",text:"예복 1차 가봉",cat:"shopping"},
+    {id:"p03",text:"촬영 컨셉·레퍼런스 사진 준비",cat:"photo"},
+    {id:"p04",text:"촬영 소품 준비 (커플룩, 소품 등)",cat:"photo"},
+    {id:"p05",text:"예물 반지 수령",cat:"shopping"},
+    {id:"p06",text:"한복 셀렉 / 1차 가봉",cat:"shopping"},
+    {id:"p07",text:"웨딩 관리 시작 (피부·등·팔라인)",cat:"etc"}
+  ]},
+  {mbStart:6,mbEnd:4,label:"스튜디오 촬영",emoji:"💛",items:[
+    {id:"ph01",text:"촬영 전 준비물 체크 (속옷, 간식, 커플룩 등)",cat:"photo"},
+    {id:"ph02",text:"예복 2차 가봉·수령",cat:"shopping"},
+    {id:"ph03",text:"스튜디오 웨딩 촬영",cat:"photo"},
+    {id:"ph04",text:"한복 2차 가봉·수령",cat:"shopping"}
+  ]},
+  {mbStart:4,mbEnd:3,label:"셀렉 & 청첩장",emoji:"🖼️",items:[
+    {id:"sl01",text:"촬영 사진 셀렉",cat:"photo"},
+    {id:"sl02",text:"앨범·액자 사진 선택",cat:"photo"},
+    {id:"sl03",text:"모바일 청첩장 제작",cat:"etc"},
+    {id:"sl04",text:"모바일 청첩장 발송",cat:"etc"},
+    {id:"sl05",text:"생화부케 상담·예약",cat:"flower"}
+  ]},
+  {mbStart:3,mbEnd:1,label:"막바지 준비",emoji:"🏡",items:[
+    {id:"f01",text:"신혼집 구하기·계약",cat:"etc"},
+    {id:"f02",text:"가전·가구 준비",cat:"shopping"},
+    {id:"f03",text:"혼수 입주",cat:"shopping"},
+    {id:"f04",text:"주례/사회 섭외",cat:"ceremony"},
+    {id:"f05",text:"축가 부탁",cat:"ceremony"},
+    {id:"f06",text:"접수대 담당 섭외",cat:"ceremony"},
+    {id:"f07",text:"폐백 여부 결정",cat:"ceremony"},
+    {id:"f08",text:"하객 명단 정리 (참석 여부 확인)",cat:"ceremony"},
+    {id:"f09",text:"답례품 준비",cat:"ceremony"},
+    {id:"f10",text:"혼주 의상 준비 (한복/정장)",cat:"family"}
+  ]},
+  {mbStart:2,mbEnd:0,label:"본식 준비 & 마무리",emoji:"✨",items:[
+    {id:"b01",text:"본식 드레스 가봉·셀렉",cat:"dress"},
+    {id:"b02",text:"2부 의상 준비",cat:"dress"},
+    {id:"b03",text:"종이 청첩장 제작·발송",cat:"etc"},
+    {id:"b04",text:"수정본·액자 수령",cat:"photo"},
+    {id:"b05",text:"혼주 확인 / 예단 전달",cat:"family"},
+    {id:"b06",text:"식순표 작성·사회자 공유",cat:"ceremony"},
+    {id:"b07",text:"식전영상·MR 음원 준비 (USB)",cat:"ceremony"},
+    {id:"b08",text:"본식 부케 셀렉",cat:"flower"},
+    {id:"b09",text:"포토테이블 사진 준비",cat:"ceremony"},
+    {id:"b10",text:"식권 준비",cat:"ceremony"},
+    {id:"b11",text:"비상키트 준비 (바늘, 밴드, 양면테이프 등)",cat:"ceremony"},
+    {id:"b12",text:"축의금 봉투·장갑 준비",cat:"ceremony"}
+  ]},
   {mbStart:0,mbEnd:0,label:"웨딩데이",emoji:"💍",items:[{id:"w01",text:"웨딩데이 ♥",cat:"ceremony"}]},
 ];
 
@@ -116,8 +178,14 @@ const PHOTO_GUIDE=[
 ];
 
 function fresh(){return{groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
-function migrateData(d){if(!d)return d;if(!d.theme)d.theme="garden";if(!d.motto)d.motto="";if(!d._deletedIds)d._deletedIds=[];if(!d.dismissedReminders)d.dismissedReminders=[];if(!d.checklist)return d;let needsMigration=d.checklist.some(p=>p.mbStart===undefined);if(!needsMigration)return d;
-  // Map old checklist done/memo states onto new template
+function migrateData(d){if(!d)return d;if(!d.theme)d.theme="garden";if(!d.motto)d.motto="";if(!d._deletedIds)d._deletedIds=[];if(!d.dismissedReminders)d.dismissedReminders=[];if(!d.checklist)return d;
+  /* Check if template has changed — compare item IDs */
+  const templateIds=new Set();CL_TEMPLATE.forEach(p=>p.items.forEach(i=>templateIds.add(i.id)));
+  const existingIds=new Set();d.checklist.forEach(p=>(p.items||[]).forEach(i=>{if(!i.custom)existingIds.add(i.id);}));
+  const hasNewItems=[...templateIds].some(id=>!existingIds.has(id));
+  const needsMigration=d.checklist.some(p=>p.mbStart===undefined)||hasNewItems;
+  if(!needsMigration)return d;
+  const cl=d.checklist;
   const itemStates={};cl.forEach(p=>{(p.items||[]).forEach(i=>{itemStates[i.id]={done:i.done,memo:i.memo||""};});});
   const customItems={};cl.forEach((p,pi)=>{(p.items||[]).forEach(i=>{if(i.custom){if(!customItems[pi])customItems[pi]=[];customItems[pi].push(i);}});});
   const newCL=JSON.parse(JSON.stringify(CL_TEMPLATE)).map((p,pi)=>({...p,items:[...p.items.map(i=>({...i,done:itemStates[i.id]?.done||false,memo:itemStates[i.id]?.memo||""})),...(customItems[pi]||[])]}));
@@ -183,6 +251,7 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
   const confirmReminder=(id)=>{setSessionDismissed([...sessionDismissed,id]);};
   const dismissReminder=(id)=>{setData({...data,dismissedReminders:[...dismissed,id]});};
   const[guideOpen,setGuideOpen]=useState(false);
+  const[dashTab,setDashTab]=useState("status");
   const curPhaseIdx=data.checklist.findIndex(p=>phaseStatus(p,data.weddingDate)==="current");
   const curPhaseDone=curPhaseIdx>=0&&data.checklist[curPhaseIdx].items.every(it=>it.done);
   const showPhotoGuide=(curPhaseIdx>=2&&curPhaseIdx<=3)||(curPhaseIdx===1&&curPhaseDone);
@@ -216,15 +285,59 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
         </div>
       </div>
     </div></div>
-    <div className="stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}><div onClick={()=>setTab("checklist")} style={{...S.card,background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`,cursor:"pointer"}}><div style={{fontSize:12,fontWeight:700,color:P.greenDk,marginBottom:12}}>📊 진행률</div><div style={{height:10,background:"rgba(255,255,255,0.6)",borderRadius:5,overflow:"hidden",marginBottom:12}}><div style={{height:"100%",background:`linear-gradient(90deg,${P.green},${P.blue})`,borderRadius:5,width:pct+"%"}}/></div><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:32,fontWeight:800,color:P.greenDk}}>{pct}%</span><span style={{fontSize:14,color:P.greenDk,opacity:0.7,alignSelf:"flex-end"}}>{dn}/{tot}</span></div></div><div onClick={()=>setTab("budget")} style={{...S.card,background:`linear-gradient(135deg,${P.lavBg},${P.lavLt})`,cursor:"pointer"}}><div style={{fontSize:12,fontWeight:700,color:P.lavDk,marginBottom:12}}>💰 예산</div><div className="budget-main" style={{fontSize:24,fontWeight:800,color:P.lavDk,marginBottom:4}}>{fmtW(bT)}</div><div style={{fontSize:13,color:P.lav}}>지출 {fmtW(bP)}</div><div style={{fontSize:13,color:P.greenDk,fontWeight:700}}>잔여 {fmtW(bT-bP)}</div></div></div>
-    <div style={{...S.card,background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`,border:"1px solid "+P.blue+"30"}}><div onClick={()=>setTipOpen(!tipOpen)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}><div style={{fontSize:12,fontWeight:700,color:P.blueDk}}>🤖 Tip</div><span style={{fontSize:12,color:P.blueDk,fontWeight:600}}>{tipOpen?"접기 ▲":"펼치기 ▼"}</span></div>{tipOpen&&<div style={{marginTop:10}}>{tips.map((t,i)=><div key={i} className="tip-text" style={{fontSize:14,color:P.text,lineHeight:1.8,padding:"3px 0"}}>{t}</div>)}{showPhotoGuide&&<button onClick={()=>setGuideOpen(true)} style={{marginTop:10,padding:"8px 16px",background:"rgba(255,255,255,0.7)",border:"1px solid "+P.blue+"40",borderRadius:10,fontSize:13,fontWeight:600,color:P.blueDk,cursor:"pointer",fontFamily:FONT,width:"100%"}}>📋 촬영 준비 가이드 보기</button>}</div>}</div>
+    {/* Tabbed Dashboard Section */}
+    <div style={{...S.card,padding:"18px 16px"}}>
+      <div style={{fontSize:14,fontWeight:700,color:P.periDk,marginBottom:14}}>한눈에 보는 준비 현황</div>
+      <div style={{display:"flex",gap:0,marginBottom:16,background:P.periLt,borderRadius:10,padding:3}}>
+        {[{k:"status",l:"📊 현황"},{k:"schedule",l:"📅 일정"},{k:"guide",l:"💡 가이드"}].map(t=>
+          <button key={t.k} onClick={()=>setDashTab(t.k)} style={{flex:1,padding:"9px 0",border:"none",borderRadius:8,fontSize:13,fontWeight:dashTab===t.k?700:500,background:dashTab===t.k?"#fff":P.transparent,color:dashTab===t.k?P.periDk:P.textSub,cursor:"pointer",fontFamily:FONT,boxShadow:dashTab===t.k?"0 1px 4px rgba(0,0,0,0.06)":"none",transition:"all 0.2s"}}>{t.l}</button>
+        )}
+      </div>
+      {/* 📊 현황 탭 */}
+      {dashTab==="status"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <div onClick={()=>setTab("checklist")} style={{padding:"16px 14px",borderRadius:14,background:`linear-gradient(135deg,${P.greenBg},${P.greenLt})`,cursor:"pointer"}}>
+            <div style={{fontSize:11,fontWeight:700,color:P.greenDk,marginBottom:10}}>📊 진행률</div>
+            <div style={{height:8,background:"rgba(255,255,255,0.6)",borderRadius:4,overflow:"hidden",marginBottom:10}}><div style={{height:"100%",background:`linear-gradient(90deg,${P.green},${P.blue})`,borderRadius:4,width:pct+"%"}}/></div>
+            <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:28,fontWeight:800,color:P.greenDk}}>{pct}%</span><span style={{fontSize:13,color:P.greenDk,opacity:0.7,alignSelf:"flex-end"}}>{dn}/{tot}</span></div>
+          </div>
+          <div onClick={()=>setTab("budget")} style={{padding:"16px 14px",borderRadius:14,background:`linear-gradient(135deg,${P.lavBg},${P.lavLt})`,cursor:"pointer"}}>
+            <div style={{fontSize:11,fontWeight:700,color:P.lavDk,marginBottom:10}}>💰 예산</div>
+            <div className="budget-main" style={{fontSize:20,fontWeight:800,color:P.lavDk,marginBottom:3}}>{fmtW(bT)}</div>
+            <div style={{fontSize:12,color:P.lav}}>지출 {fmtW(bP)}</div>
+            <div style={{fontSize:12,color:P.greenDk,fontWeight:700}}>잔여 {fmtW(bT-bP)}</div>
+          </div>
+        </div>
+        <div onClick={()=>setTab("checklist")} style={{padding:"14px 16px",borderRadius:14,background:P.greenBg,cursor:"pointer"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:12,fontWeight:700,color:P.periDk}}>🌿 우리의 준비 현황</span><div style={{display:"flex",gap:6,alignItems:"center"}}>{cur&&phaseMonthRange(cur,data.weddingDate)&&<span style={{padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:600,background:P.blueLt,color:P.blueDk}}>{phaseMonthRange(cur,data.weddingDate)}</span>}<span style={S.lnk}>전체→</span></div></div>
+          {cur&&<div style={{fontSize:12,color:P.textSub,marginBottom:8}}>기한 {phaseDeadline(cur,data.weddingDate)}</div>}
+          {todo.slice(0,4).map(item=><div key={item.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:"#fff",borderRadius:10,marginBottom:4}}><Bg cat={item.cat}/><span style={{fontSize:13,color:P.text}}>{item.text}</span></div>)}
+          {todo.length>4&&<div style={{fontSize:12,color:P.textMuted,textAlign:"center",marginTop:4}}>외 {todo.length-4}개</div>}
+        </div>
+      </div>}
+      {/* 📅 일정 탭 */}
+      {dashTab==="schedule"&&<div>
+        {upcoming.length===0&&<div style={{textAlign:"center",padding:"30px 16px",color:P.textMuted,fontSize:14}}>등록된 일정이 없어요</div>}
+        {upcoming.map((d,i)=>{const udd=getDday(d.date);return<div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,marginBottom:8,background:i===0?`linear-gradient(135deg,${P.peri}15,${P.blue}10)`:P.greenBg}}>
+          <div style={{width:48,height:48,borderRadius:12,background:i===0?`linear-gradient(135deg,${P.peri},${P.blue})`:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0,border:i===0?"none":"1px solid "+P.border}}>
+            <div style={{fontSize:11,fontWeight:700,color:i===0?"rgba(255,255,255,0.8)":P.textMuted,lineHeight:1}}>D</div>
+            <div style={{fontSize:16,fontWeight:800,color:i===0?"#fff":P.periDk,lineHeight:1}}>{udd}</div>
+          </div>
+          <div style={{flex:1,minWidth:0}}><div style={{fontSize:14,fontWeight:700,color:P.text}}>{d.name}</div><div style={{fontSize:12,color:P.textSub,marginTop:2}}>{fmtDate(d.date)}{d.time?" · "+d.time:""}</div></div>
+        </div>;})}
+        {upcoming.length>0&&<button onClick={()=>setTab("schedule")} style={{width:"100%",padding:"10px",background:"none",border:"1px solid "+P.border,borderRadius:10,fontSize:13,fontWeight:600,color:P.periDk,cursor:"pointer",fontFamily:FONT,marginTop:4}}>전체 일정 보기 →</button>}
+      </div>}
+      {/* 💡 가이드 탭 */}
+      {dashTab==="guide"&&<div>
+        {tips.map((t,i)=><div key={i} className="tip-text" style={{fontSize:14,color:P.text,lineHeight:1.8,padding:"6px 0",borderBottom:i<tips.length-1?"1px solid "+P.border+"40":"none"}}>{t}</div>)}
+        {showPhotoGuide&&<button onClick={()=>setGuideOpen(true)} style={{marginTop:12,padding:"10px 16px",background:`linear-gradient(135deg,${P.blueBg},${P.blueLt})`,border:"1px solid "+P.blue+"30",borderRadius:10,fontSize:13,fontWeight:600,color:P.blueDk,cursor:"pointer",fontFamily:FONT,width:"100%"}}>📋 촬영 준비 가이드 보기</button>}
+      </div>}
+    </div>
     {/* Photography Guide Overlay */}
     <Modal title="📋 촬영 준비 가이드" open={guideOpen} onClose={()=>setGuideOpen(false)}>
       <div style={{fontSize:13,color:P.textSub,marginBottom:16,lineHeight:1.5}}>촬영가봉부터 당일까지 꼭 알아두시면 좋은 핵심 준비사항을 정리했어요</div>
       {PHOTO_GUIDE.map((sec,i)=><div key={i} style={{marginBottom:16}}><div style={{fontSize:15,fontWeight:700,color:P.periDk,marginBottom:8,padding:"8px 12px",background:P.periLt,borderRadius:10}}>{sec.title}</div>{sec.items.map((item,j)=><div key={j} style={{fontSize:14,color:P.text,lineHeight:1.7,padding:"5px 0 5px 12px",borderLeft:"2px solid "+P.border}}>{item}</div>)}</div>)}
     </Modal>
-    {upcoming.length>0&&<div><div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:12,fontWeight:700,color:P.periDk}}>📌 다가오는 일정</span><span style={S.lnk} onClick={()=>setTab("schedule")}>전체→</span></div><div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:6,scrollSnapType:"x mandatory"}}>{upcoming.map((d,i)=>{const dd=getDday(d.date);return<div key={i} style={{minWidth:160,flex:"0 0 auto",padding:"16px 18px",borderRadius:16,textAlign:"center",scrollSnapAlign:"start",background:i===0?`linear-gradient(135deg,${P.peri},${P.blue})`:"#fff",border:i===0?"none":"1px solid "+P.border,boxShadow:i===0?"0 4px 14px rgba(91,126,174,0.2)":"0 2px 6px rgba(0,0,0,0.03)"}}><div style={{fontSize:22,fontWeight:800,color:i===0?"#fff":P.periDk,lineHeight:1}}>D-{dd}</div><div style={{fontSize:12,color:i===0?"rgba(255,255,255,0.8)":P.textSub,marginTop:6}}>{fmtDate(d.date)}</div><div style={{fontSize:13,fontWeight:700,color:i===0?"#fff":P.text,marginTop:4}}>{d.name}</div></div>;})}</div></div>}
-    <div style={{...S.card,cursor:"pointer"}} onClick={()=>setTab("checklist")}><div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:12,fontWeight:700,color:P.periDk}}>🌿 우리의 준비 현황</span><div style={{display:"flex",gap:6,alignItems:"center"}}>{cur&&phaseMonthRange(cur,data.weddingDate)&&<span style={{padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:600,background:P.blueLt,color:P.blueDk}}>{phaseMonthRange(cur,data.weddingDate)}</span>}<span style={S.lnk}>전체→</span></div></div>{cur&&<div style={{fontSize:12,color:P.textSub,marginBottom:10}}>기한 {phaseDeadline(cur,data.weddingDate)}</div>}{todo.slice(0,5).map(item=><div key={item.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",background:P.greenBg,borderRadius:11,marginBottom:5}}><Bg cat={item.cat}/><span style={{fontSize:14,color:P.text}}>{item.text}</span></div>)}{todo.length>5&&<div style={{fontSize:13,color:P.textMuted,textAlign:"center"}}>외 {todo.length-5}개</div>}</div>
   </div>;}
 
 /* ═══ CHECKLIST — dynamic dates ═══ */
@@ -493,7 +606,7 @@ export default function App(){const[ck,setCk]=useState(null);const[data,setDR]=u
   const mergeById=(local,remote,deleted)=>{if(!local)return(remote||[]).filter(r=>!deleted.has(r.id));if(!remote)return local;const map=new Map();remote.forEach(r=>{const id=r.id||JSON.stringify(r);if(!deleted.has(id))map.set(id,r);});local.forEach(l=>{const id=l.id||JSON.stringify(l);map.set(id,l);});return[...map.values()];};
   const mergeData=(local,remote)=>{if(!remote)return local;const del=new Set(local._deletedIds||[]);const m={...remote,...local};
     m.keyDates=mergeById(local.keyDates,remote.keyDates,del);m.budget=mergeById(local.budget,remote.budget,del);m.contacts=mergeById(local.contacts,remote.contacts,del);m.vendors=m.contacts;m.sdmVendors=mergeById(local.sdmVendors,remote.sdmVendors,del);m.sdmPhotos=mergeById(local.sdmPhotos,remote.sdmPhotos,del);
-    if(local.checklist&&remote.checklist){m.checklist=local.checklist.map((lp,i)=>{const rp=remote.checklist[i];if(!rp)return lp;const localIds=new Set(lp.items.map(x=>x.id));const remoteCustom=rp.items.filter(r=>r.custom&&!localIds.has(r.id)&&!del.has(r.id));return{...lp,items:[...lp.items.map(li=>{const ri=rp.items.find(r=>r.id===li.id);if(!ri)return li;return{...li,done:li.done||ri.done,memo:li.memo||ri.memo};}),...remoteCustom]};});}
+    if(local.checklist&&remote.checklist){m.checklist=local.checklist.map((lp,i)=>{const rp=remote.checklist[i];if(!rp)return lp;const localIds=new Set(lp.items.map(x=>x.id));const remoteCustom=rp.items.filter(r=>r.custom&&!localIds.has(r.id)&&!del.has(r.id));return{...lp,items:[...lp.items.map(li=>{const ri=rp.items.find(r=>r.id===li.id);if(!ri)return li;return{...li,done:li.done,memo:li.memo||ri.memo};}),...remoteCustom]};});}
     m._deletedIds=[];return m;};
   const setData=useCallback(nd=>{setDR(nd);try{localStorage.setItem("wp_bk_"+(ck||""),JSON.stringify(nd));}catch{}if(timerRef.current)clearTimeout(timerRef.current);timerRef.current=setTimeout(async()=>{if(!ck)return;
       try{const remote=await dbLoad(ck);const merged=remote?mergeData(nd,remote):nd;setDR(merged);await dbSave(ck,merged);showT("☁️ 저장 완료");}catch(e){console.error("Save error:",e);await dbSave(ck,nd);showT("☁️ 저장 완료");}},800);},[ck]);
