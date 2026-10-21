@@ -38,7 +38,6 @@ const CL_TEMPLATE=[
     {id:"d02",text:"드레스샵 결정·계약",cat:"dress"},
     {id:"d03",text:"예복(턱시도) 샵 알아보기",cat:"shopping"},
     {id:"d04",text:"예복 디자인 선택·맞춤 시작",cat:"shopping"},
-    {id:"d06",text:"혼주 한복 알아보기 (맞춤/대여)",cat:"family"},
     {id:"d05",text:"예물 반지 디자인 확정·제작 의뢰",cat:"shopping"},
     {id:"d08",text:"혼주 메이크업 예약",cat:"makeup"},
     {id:"d07",text:"혼수 품목 리스트 작성",cat:"shopping"}
@@ -74,6 +73,7 @@ const CL_TEMPLATE=[
     {id:"f05",text:"축가 부탁",cat:"ceremony"},
     {id:"f06",text:"접수대 담당 섭외",cat:"ceremony"},
     {id:"f10",text:"혼주 의상 준비 (한복/정장)",cat:"family"},
+    {id:"d06",text:"혼주 한복 알아보기 (맞춤/대여)",cat:"family"},
     {id:"p06",text:"혼주 한복 셀렉 / 1차 가봉",cat:"family"},
     {id:"f07",text:"폐백 여부 결정",cat:"ceremony"},
     {id:"f09",text:"답례품 준비",cat:"ceremony"},
@@ -132,8 +132,14 @@ function phaseDates(ph, wd) {
   let start = calcPhaseDate(scaledMb(ph.mbStart, wd), wd);
   let end = calcPhaseDate(scaledMb(ph.mbEnd, wd), wd);
   if (!wd) return { start, end };
-  const dls = (ph.items || []).map(i => msDeadline(i.id, MS, wd)).filter(Boolean);
-  if (dls.length) end = new Date(Math.max(...dls));
+  const items = ph.items || [];
+  const dls = items.map(i => msDeadline(i.id, MS, wd)).filter(Boolean);
+  if (dls.length) {
+    const hasDefault = items.some(i => !msDeadline(i.id, MS, wd));
+    end = new Date(Math.max(...dls, ...(hasDefault ? [end] : [])));
+    const first = new Date(Math.min(...dls));
+    if (first < start) start = addDays(first, -14);
+  }
   if (ph.anchor === "photo" && MS && MS.photoDate) start = new Date(MS.photoDate);
   if (start && end && start > end) start = new Date(end);
   return { start, end };
@@ -171,6 +177,8 @@ function phaseDeadline(ph, wd) {
   return d.getFullYear() + "." + (d.getMonth()+1) + "." + d.getDate() + "(" + w[d.getDay()] + ")";
 }
 function phaseDeadlineDate(ph, wd) { return phaseDates(ph, wd).end; }
+function itemDeadline(item, ph, wd) { return msDeadline(item.id, MS, wd) || calcPhaseDate(scaledMb(ph.mbEnd, wd), wd); }
+function itemOverdue(item, ph, wd) { if (!wd || item.done) return false; const d = itemDeadline(item, ph, wd); const t = new Date(); t.setHours(0,0,0,0); return !!d && d < t; }
 
 const CAT={venue:{bg:"#FFF8E1",fg:"#D4A017",n:"웨딩홀",ic:"🏛️"},planner:{bg:P.lavLt,fg:P.lavDk,n:"플래너",ic:"📋"},dress:{bg:"#FCE4EC",fg:"#C62860",n:"드레스",ic:"👗"},makeup:{bg:"#FDF2F8",fg:"#B0408A",n:"메이크업",ic:"💄"},photo:{bg:P.greenLt,fg:P.greenDk,n:"촬영",ic:"📷"},shopping:{bg:"#FFF8E1",fg:"#C8960A",n:"혼수",ic:"🛍️"},honeymoon:{bg:P.blueLt,fg:P.blueDk,n:"신혼여행",ic:"✈️"},ceremony:{bg:P.periLt,fg:P.periDk,n:"예식",ic:"💒"},flower:{bg:"#FCE4EC",fg:"#C62850",n:"부케·꽃",ic:"💐"},family:{bg:P.greenLt,fg:"#5D6E3A",n:"혼주",ic:"👨‍👩‍👧"},etc:{bg:"#F0F0F0",fg:"#707080",n:"기타",ic:"📌"}};
 const TIPS_BY_PHASE=[
@@ -193,17 +201,61 @@ const PHOTO_GUIDE=[
 ];
 
 /* ═══ 일정 연결 고리 ═══
-   촬영 전: 촬영일·촬영가봉일에서 거꾸로 계산
-   촬영 후: 촬영 → 셀렉 → (보정·앨범 제작) → 수정본 수령 → 모바일 청첩장 → 결혼식
-   셀렉 기한은 ①촬영 후 2개월 ②청첩장 일정에서 거꾸로 계산한 날 중 더 빠른 날 */
-const SCHED={selectWithin:60,retouchDays:90,mobileMake:56,mobileSend:42};
+   주요 일정(스드메 계약 → 촬영가봉 → 촬영 → 셀렉 → 결혼식)을 먼저 입력하면
+   각 할 일의 기한이 "결혼 N개월 전" 대신 그 일정에 맞춰 움직여요.
+   - 한 항목에 기준이 여러 개면 가장 빠른 날이 기한
+   - 기준 일정이 아직 없으면 기존 "결혼 N개월 전" 단계 기한을 그대로 사용 */
+const SCHED={selectWithin:60,retouchDays:90,mobileMake:56,mobileSend:42,fittingBeforePhoto:28};
 let MS={};/* 현재 커플의 milestones — 테마(P)처럼 App 렌더 때 갱신 */
-const MS_DEPS={p01:{ms:"fittingDate",days:0},p02:{ms:"fittingDate",days:0},p03:{ms:"photoDate",days:14},p04:{ms:"photoDate",days:7},p05:{ms:"fittingDate",days:0},p07:{ms:"photoDate",days:60},ph01:{ms:"photoDate",days:1},ph02:{ms:"photoDate",days:7},ph03:{ms:"photoDate",days:0},
-  sl01:{ms:"select"},sl02:{ms:"select"},b04:{ms:"retouch"},
-  sl03:{ms:"weddingAuto",days:SCHED.mobileMake},sl04:{ms:"weddingAuto",days:SCHED.mobileSend},
-  b01:{ms:"weddingAuto",days:42},b02:{ms:"weddingAuto",days:42}};
+const ANCHORS=[
+  {k:"sdmDate",l:"스드메 계약일",short:"스드메 계약"},
+  {k:"fittingDate",l:"촬영가봉일",short:"촬영가봉"},
+  {k:"photoDate",l:"촬영일",short:"촬영"},
+  {k:"selectDate",l:"셀렉일",short:"셀렉",opt:true}
+];
+/* 항목별 기준: [기준 일정, 일수] — 음수 = 그 일정 N일 전, 0 = 당일, 양수 = 이후 */
+const RULES={
+  s01:[["sdmDate",0]],                              // 플래너 → 스드메 제안·계약 전에
+  s04:[["sdmDate",0],["fittingDate",-30]],          // 스튜디오 컨셉을 촬영가봉에 반영하려면 미리 계약
+  s08:[["photoDate",-120]],                         // 반지 디자인은 제작 의뢰 1달 전쯤
+  d05:[["photoDate",-90]],                          // 반지 제작 2~3개월 → 촬영 때 착용
+  p05:[["photoDate",-7]],
+  d01:[["sdmDate",0],["fittingDate",-45]],
+  d02:[["sdmDate",0],["fittingDate",-30]],
+  d03:[["photoDate",-90]],                          // 예복은 촬영 때 입어야 해서 촬영 기준
+  d04:[["photoDate",-60]],
+  p02:[["photoDate",-30]],
+  ph02:[["photoDate",-7]],
+  d06:[["wedding",-120]],                           // 혼주 한복: 맞춤 2~3개월
+  p06:[["wedding",-60]],
+  ph04:[["wedding",-14]],
+  p07:[["photoDate",-60]],
+  p01:[["fittingDate",0]],
+  p03:[["fittingDate",-3],["photoDate",-14]],       // 레퍼런스는 촬영가봉 전에 → 드레스 고를 때 컨셉 반영
+  p04:[["photoDate",-7]],
+  ph01:[["photoDate",-1]],
+  ph03:[["photoDate",0]],
+  sl01:[["select"]],sl02:[["select"]],
+  b04:[["retouch"]],
+  sl03:[["wedding",-SCHED.mobileMake]],
+  sl04:[["wedding",-SCHED.mobileSend]],
+  f08:[["wedding",-60]],                            // 하객 명단 → 종이 청첩장 발송 전
+  b03:[["wedding",-60]],
+  f05:[["wedding",-60]],                            // 축가는 최소 2개월 전
+  b01:[["wedding",-42]],b02:[["wedding",-42]],
+  b06:[["wedding",-7]],b07:[["wedding",-7]],
+  b09:[["wedding",-7]]
+};
 const addDays=(dt,n)=>{const d=new Date(dt);d.setDate(d.getDate()+n);return d;};
 const md=d=>(d.getMonth()+1)+"/"+d.getDate();
+/* 입력 안 된 촬영가봉일은 촬영일에서 추정 (보통 촬영 3~4주 전) */
+function anchorDate(k,m,wd){m=m||{};
+  if(k==="wedding")return wd?{date:new Date(wd),est:false}:null;
+  if(m[k])return{date:new Date(m[k]),est:false};
+  if(k==="fittingDate"&&m.photoDate)return{date:addDays(m.photoDate,-SCHED.fittingBeforePhoto),est:true};
+  return null;}
+const anchorShort=k=>k==="wedding"?"결혼식":(ANCHORS.find(a=>a.k===k)?.short||k);
+const relTxt=(k,n,est)=>{const nm=anchorShort(k)+(est?"(예상)":"");if(n===0)return nm+" 당일";const a=Math.abs(n);const t=a%30===0&&a>=60?(a/30)+"개월":a%7===0&&a>=14?(a/7)+"주":a+"일";return nm+" "+t+(n<0?" 전":" 후");};
 /* 셀렉 기한: 셀렉일이 잡혀 있으면 그 날, 아니면 두 기준 중 빠른 날 */
 function selectInfo(milestones,wd){const m=milestones||{};
   if(m.selectDate)return{date:new Date(m.selectDate),why:"셀렉 예약일"};
@@ -211,11 +263,16 @@ function selectInfo(milestones,wd){const m=milestones||{};
   if(wd)c.push({date:addDays(wd,-(SCHED.mobileMake+SCHED.retouchDays)),why:"청첩장 일정 역산"});
   if(!c.length)return null;return c.reduce((a,b)=>b.date<a.date?b:a);}
 function retouchInfo(milestones,wd){const s=selectInfo(milestones,wd);if(!s)return null;return{date:addDays(s.date,SCHED.retouchDays),why:(milestones?.selectDate?"셀렉일":"셀렉 기한")+" + 약 3개월 (보정·앨범 제작)"};}
-function msInfo(itemId,milestones,wd){const dep=MS_DEPS[itemId];if(!dep)return null;
-  if(dep.ms==="select")return selectInfo(milestones,wd);
-  if(dep.ms==="retouch")return retouchInfo(milestones,wd);
-  let dt;if(dep.ms==="weddingAuto"){if(!wd)return null;dt=wd;}else{dt=milestones?.[dep.ms];}if(!dt)return null;
-  return{date:addDays(dt,-dep.days),why:null};}
+function msInfo(itemId,milestones,wd){const rs=RULES[itemId];if(!rs)return null;const c=[];
+  rs.forEach(([k,n])=>{if(k==="select"){const x=selectInfo(milestones,wd);if(x)c.push(x);return;}if(k==="retouch"){const x=retouchInfo(milestones,wd);if(x)c.push(x);return;}
+    const a=anchorDate(k,milestones,wd);if(a)c.push({date:addDays(a.date,n),why:relTxt(k,n,a.est)});});
+  if(!c.length)return null;return c.reduce((a,b)=>b.date<a.date?b:a);}
+/* 주요 일정 순서 점검 */
+function anchorWarns(m,wd){m=m||{};const seq=[...ANCHORS.map(a=>({k:a.k,l:a.short,v:m[a.k]})),{k:"wedding",l:"결혼식",v:wd}].filter(x=>x.v);const w=[];
+  for(let i=1;i<seq.length;i++)if(new Date(seq[i].v)<new Date(seq[i-1].v))w.push(seq[i-1].l+"보다 "+seq[i].l+" 날짜가 빨라요. 날짜를 다시 확인해주세요");
+  if(m.fittingDate&&m.photoDate){const gap=(new Date(m.photoDate)-new Date(m.fittingDate))/864e5;if(gap>=0&&gap<14)w.push("촬영가봉과 촬영 사이가 "+Math.round(gap)+"일이에요. 드레스 수선 기간을 고려하면 보통 3~4주 간격을 둬요");}
+  if(m.sdmDate&&m.fittingDate){const gap=(new Date(m.fittingDate)-new Date(m.sdmDate))/864e5;if(gap>=0&&gap<30)w.push("스드메 계약 후 촬영가봉까지 "+Math.round(gap)+"일이에요. 촬영 컨셉을 정할 시간이 빠듯할 수 있어요");}
+  return w;}
 function msDeadline(itemId,milestones,wd){return msInfo(itemId,milestones,wd)?.date||null;}
 /* 연결 고리가 끊길 때 경고: 수정본이 청첩장 제작보다 늦게 나오는 경우 등 */
 function msWarn(itemId,milestones,wd){if(!wd)return null;const m=milestones||{};
@@ -224,7 +281,7 @@ function msWarn(itemId,milestones,wd){if(!wd)return null;const m=milestones||{};
   if(itemId==="sl01"&&m.photoDate&&!m.selectDate){const byPhoto=addDays(m.photoDate,SCHED.selectWithin);const byInv=addDays(wd,-(SCHED.mobileMake+SCHED.retouchDays));if(byInv<byPhoto)return"청첩장 일정을 맞추려면 촬영 후 2개월보다 빠른 "+md(byInv)+"까지 셀렉하셔야 해요";}
   return null;}
 const CL_VER=2;
-function fresh(){return{clVer:CL_VER,planStart:new Date().toISOString().slice(0,10),groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],milestones:{photoDate:"",fittingDate:"",selectDate:""},checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
+function fresh(){return{clVer:CL_VER,planStart:new Date().toISOString().slice(0,10),groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],milestones:{sdmDate:"",photoDate:"",fittingDate:"",selectDate:""},checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
 function migrateData(d){if(!d)return d;if(!d.theme)d.theme="garden";if(!d.motto)d.motto="";if(!d._deletedIds)d._deletedIds=[];if(!d.dismissedReminders)d.dismissedReminders=[];if(!d.milestones)d.milestones={photoDate:"",fittingDate:""};if(d.milestones.mainFittingDate!==undefined)delete d.milestones.mainFittingDate;
   if(d.keyDates)d.keyDates=d.keyDates.filter(k=>k.id!=="auto_photo"&&k.id!=="auto_fitting");
   if(!d.checklist)return d;
@@ -421,21 +478,23 @@ function CLTab({data,setData}){const wd=data.weddingDate;const[memoId,setMemoId]
       })()}
     </Modal>
     <Modal title="항목 추가" open={addPi!==null} onClose={()=>setAddPi(null)}><div style={{marginBottom:18}}><label style={S.lbl}>할 일</label><input style={MI} placeholder="예: 피부관리" value={addF.text} onChange={e=>setAddF({...addF,text:e.target.value})}/></div><div style={{marginBottom:18}}><label style={S.lbl}>카테고리</label><select style={MI} value={addF.cat} onChange={e=>setAddF({...addF,cat:e.target.value})}>{Object.entries(CAT).map(([k,c])=><option key={k} value={k}>{c.ic} {c.n}</option>)}<option value="__custom__">✏️ 직접 입력</option></select></div>{addF.cat==="__custom__"&&<div style={{marginBottom:18}}><label style={S.lbl}>카테고리명</label><input style={MI} value={addF.customCatName} onChange={e=>setAddF({...addF,customCatName:e.target.value})}/></div>}<button style={{...S.btn,width:"100%"}} onClick={addItem}>추가</button></Modal>
-    {wd&&<div style={{...S.card,marginBottom:20,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,padding:"16px 18px"}}><div style={{fontSize:13,color:P.periDk,fontWeight:600,marginBottom:10}}>주요 일정 역산</div><div style={{fontSize:12,color:P.textSub,marginBottom:12,lineHeight:1.6}}>촬영일·가봉일이 정해지면 관련 항목에 마감일이 자동으로 표시돼요.<br/>촬영 후 일정은 <b>셀렉 → 보정·앨범 제작(약 3개월) → 수정본 수령 → 모바일 청첩장</b> 순서로 이어서 계산돼요</div>
+    {wd&&<div style={{...S.card,marginBottom:20,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,padding:"16px 18px"}}><div style={{fontSize:14,color:P.periDk,fontWeight:700,marginBottom:6}}>📌 주요 일정 먼저 입력하기</div><div style={{fontSize:12,color:P.textSub,marginBottom:12,lineHeight:1.6}}>아래 일정이 정해지면 관련 할 일의 기한이 "결혼 N개월 전" 대신 <b>실제 일정에 맞춰</b> 자동으로 바뀌어요.<br/>예: 예복은 촬영 때 입어야 하니 촬영일 기준, 스튜디오는 촬영가봉 전에 계약해야 컨셉을 반영할 수 있어요.<br/>각 항목 옆에 어떤 일정 기준인지 함께 표시돼요</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {[{k:"fittingDate",l:"촬영가봉일"},{k:"photoDate",l:"촬영일"},{k:"selectDate",l:"셀렉일 (선택)"}].map(m=><div key={m.k} style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:80}}>{m.l}</label><input type="date" style={{...MI,padding:"8px 10px",fontSize:13,flex:1}} value={data.milestones?.[m.k]||""} onChange={e=>setData({...data,milestones:{...data.milestones,[m.k]:e.target.value}})}/></div>)}
+        {ANCHORS.map((m,ai)=>{const est=!data.milestones?.[m.k]&&anchorDate(m.k,data.milestones,wd)?.est;return<div key={m.k} style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:96}}><span style={{color:P.textMuted,fontWeight:400,marginRight:4}}>{ai+1}</span>{m.l}{m.opt&&<span style={{fontSize:11,color:P.textMuted,fontWeight:400}}> (선택)</span>}</label><input type="date" style={{...MI,padding:"8px 10px",fontSize:13,flex:1}} value={data.milestones?.[m.k]||""} onChange={e=>setData({...data,milestones:{...data.milestones,[m.k]:e.target.value}})}/>{est&&<span style={{fontSize:11,color:P.textMuted,whiteSpace:"nowrap"}}>예상 {md(anchorDate(m.k,data.milestones,wd).date)}</span>}</div>;})}
+        <div style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:96}}><span style={{color:P.textMuted,fontWeight:400,marginRight:4}}>{ANCHORS.length+1}</span>결혼식</label><div style={{fontSize:13,color:P.text,padding:"8px 10px"}}>{wd} <span style={{fontSize:11,color:P.textMuted}}>(설정에서 변경)</span></div></div>
       </div>
+      {anchorWarns(data.milestones,wd).map((w,i)=><div key={i} style={{fontSize:12,color:"#C0504D",marginTop:8,lineHeight:1.5}}>⚠️ {w}</div>)}
     </div>}
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       {data.checklist.map((ph,pi)=>{const st=phaseStatus(ph,wd),allD=ph.items.every(i=>i.done),dc=ph.items.filter(i=>i.done).length;
         /* Sort items by milestone deadline (earliest first), no-deadline items keep template order */
         const sortedItems=[...ph.items].sort((a,b)=>{const da=msDeadline(a.id,data.milestones,wd);const db=msDeadline(b.id,data.milestones,wd);if(da&&db)return da-db;if(da&&!db)return-1;if(!da&&db)return 1;return 0;});
         const cg={};sortedItems.forEach(it=>{const key=it.cat==="__custom__"?(it.customCatName||"기타"):it.cat;if(!cg[key])cg[key]={cat:it.cat,cn:it.customCatName,items:[]};cg[key].items.push(it);});
-        const deadlineStr=phaseDeadline(ph,wd);const isOverdue=st==="past"&&!allD;
+        const deadlineStr=phaseDeadline(ph,wd);const isOverdue=ph.items.some(it=>itemOverdue(it,ph,wd));
         return<div key={pi} style={{...S.card,borderLeft:"4px solid "+(isOverdue?"#E57373":st==="current"?P.blue:st==="past"?P.blueLt:"#E0E0E0"),padding:"20px 18px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexWrap:"wrap",gap:6}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{width:26,height:26,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",background:allD?P.green:isOverdue?"#E57373":st==="current"?P.blue:"#E0E0E0"}}>{allD?"✓":""}</span><span style={{fontSize:18,fontWeight:400,color:P.text,fontFamily:HW}}>{ph.emoji} {ph.label}</span><span style={{fontSize:13,color:P.textMuted}}>{dc}/{ph.items.length}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}>{phaseMonthRange(ph,wd)&&<span style={{padding:"3px 10px",borderRadius:8,fontSize:12,fontWeight:600,background:st==="current"?P.blueLt:P.periLt,color:st==="current"?P.blueDk:P.periDk}}>{phaseMonthRange(ph,wd)}</span>}<button style={{...S.ebtn,fontSize:11,padding:"4px 10px",background:editMode?P.periDk:"",color:editMode?"#fff":""}} onClick={()=>setEditMode(!editMode)}>{editMode?"완료":"수정"}</button></div></div>
           <div style={{fontSize:12,color:isOverdue?"#E57373":P.textSub,marginBottom:14,paddingLeft:34,fontWeight:isOverdue?600:400}}>기한 {deadlineStr}{isOverdue?" ⚠️ 지연됨":""}</div>
-          {Object.entries(cg).map(([key,g])=>{const c=CAT[g.cat];return<div key={key} style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:700,color:c?c.fg:P.blueDk,marginBottom:6,paddingLeft:3}}>{c?`${c.ic} ${c.n}`:`✏️ ${g.cn||key}`}</div>{g.items.map(item=>{const msI=msInfo(item.id,data.milestones,wd);const msDl=msI?.date;const msWhy=msI?.why;const msWn=msWarn(item.id,data.milestones,wd);return<div key={item.id} className="cl-item-wrap" style={{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",borderRadius:11,background:item.done?"#F8F8F8":P.greenBg,opacity:item.done?0.4:1,marginBottom:4,border:"1px solid "+(item.done?"#F0F0F0":P.border)}}><div style={{width:22,height:22,borderRadius:7,border:"2px solid "+(item.done?P.green:P.peri),background:item.done?P.green:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}} onClick={()=>toggle(pi,item.id)}>{item.done?"✓":""}</div><div style={{flex:1,cursor:"pointer",minWidth:0}} onClick={()=>{setMemoId({pi,id:item.id});setMemoTxt(item.memo||"");}}><span style={{textDecoration:item.done?"line-through":"none",fontSize:14,color:P.text}}>{item.text}</span>{msDl&&!item.done&&<span style={{fontSize:11,color:P.periDk,fontWeight:600,marginLeft:6}}>~{msDl.getMonth()+1}/{msDl.getDate()}{msWhy&&<span style={{fontWeight:400,color:P.textMuted}}> · {msWhy}</span>}</span>}{msWn&&!item.done&&<div style={{fontSize:12,color:"#C0504D",marginTop:4,lineHeight:1.5}}>⚠️ {msWn}</div>}{item.memo&&<div style={{fontSize:12,color:P.periDk,marginTop:3,background:P.periLt,padding:"4px 8px",borderRadius:6}}>📝 {item.memo}</div>}</div>{editMode&&<button style={{...S.dbtn,fontSize:14,flexShrink:0}} onClick={()=>rmItem(pi,item.id)}>✕</button>}</div>;})}</div>;})}
+          {Object.entries(cg).map(([key,g])=>{const c=CAT[g.cat];return<div key={key} style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:700,color:c?c.fg:P.blueDk,marginBottom:6,paddingLeft:3}}>{c?`${c.ic} ${c.n}`:`✏️ ${g.cn||key}`}</div>{g.items.map(item=>{const msI=msInfo(item.id,data.milestones,wd);const msDl=msI?.date;const msWhy=msI?.why;const msWn=msWarn(item.id,data.milestones,wd);return<div key={item.id} className="cl-item-wrap" style={{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",borderRadius:11,background:item.done?"#F8F8F8":P.greenBg,opacity:item.done?0.4:1,marginBottom:4,border:"1px solid "+(item.done?"#F0F0F0":P.border)}}><div style={{width:22,height:22,borderRadius:7,border:"2px solid "+(item.done?P.green:P.peri),background:item.done?P.green:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}} onClick={()=>toggle(pi,item.id)}>{item.done?"✓":""}</div><div style={{flex:1,cursor:"pointer",minWidth:0}} onClick={()=>{setMemoId({pi,id:item.id});setMemoTxt(item.memo||"");}}><span style={{textDecoration:item.done?"line-through":"none",fontSize:14,color:P.text}}>{item.text}</span>{msDl&&!item.done&&<span style={{fontSize:11,color:msDl<new Date(new Date().toDateString())?"#C0504D":P.periDk,fontWeight:600,marginLeft:6}}>~{msDl.getMonth()+1}/{msDl.getDate()}{msWhy&&<span style={{fontWeight:400,color:P.textMuted}}> · {msWhy}</span>}</span>}{!msDl&&itemOverdue(item,ph,wd)&&<span style={{fontSize:11,color:"#C0504D",fontWeight:600,marginLeft:6}}>~{md(itemDeadline(item,ph,wd))} 기한 지남</span>}{msWn&&!item.done&&<div style={{fontSize:12,color:"#C0504D",marginTop:4,lineHeight:1.5}}>⚠️ {msWn}</div>}{item.memo&&<div style={{fontSize:12,color:P.periDk,marginTop:3,background:P.periLt,padding:"4px 8px",borderRadius:6}}>📝 {item.memo}</div>}</div>{editMode&&<button style={{...S.dbtn,fontSize:14,flexShrink:0}} onClick={()=>rmItem(pi,item.id)}>✕</button>}</div>;})}</div>;})}
           {editMode&&<button style={{...S.ebtn,fontSize:12,padding:"6px 14px",marginTop:4}} onClick={()=>{setAddF({text:"",cat:"etc",customCatName:"",note:""});setAddPi(pi);}}>+ 항목 추가</button>}
         </div>;})}
     </div></div>;}
