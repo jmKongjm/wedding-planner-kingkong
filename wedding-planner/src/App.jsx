@@ -58,12 +58,15 @@ const CL_TEMPLATE=[
     {id:"ph01",text:"촬영 전 준비물 체크 (속옷, 간식, 커플룩 등)",cat:"photo"},
     {id:"ph03",text:"스튜디오 웨딩 촬영",cat:"photo"}
   ]},
-  {mbStart:4,mbEnd:3,label:"셀렉 & 청첩장",emoji:"🖼️",items:[
+  {mbStart:5,mbEnd:4,label:"사진 셀렉",emoji:"🖼️",anchor:"photo",items:[
     {id:"sl01",text:"촬영 사진 셀렉",cat:"photo"},
-    {id:"sl02",text:"앨범·액자 사진 선택",cat:"photo"},
-    {id:"sl05",text:"생화부케 상담·예약",cat:"flower"},
+    {id:"sl02",text:"앨범·액자 사진 선택",cat:"photo"}
+  ]},
+  {mbStart:3,mbEnd:1,label:"수정본 & 청첩장",emoji:"💌",items:[
+    {id:"b04",text:"수정본·앨범·액자 수령",cat:"photo"},
     {id:"sl03",text:"모바일 청첩장 제작",cat:"etc"},
-    {id:"sl04",text:"모바일 청첩장 발송",cat:"etc"}
+    {id:"sl04",text:"모바일 청첩장 발송",cat:"etc"},
+    {id:"sl05",text:"생화부케 상담·예약",cat:"flower"}
   ]},
   {mbStart:3,mbEnd:1,label:"막바지 준비",emoji:"🏡",items:[
     {id:"f01",text:"신혼집 구하기·계약",cat:"etc"},
@@ -82,7 +85,6 @@ const CL_TEMPLATE=[
     {id:"b02",text:"2부 의상 준비",cat:"dress"},
     {id:"b05",text:"혼주 확인 / 예단 전달",cat:"family"},
     {id:"b03",text:"종이 청첩장 제작·발송",cat:"etc"},
-    {id:"b04",text:"수정본·액자 수령",cat:"photo"},
     {id:"b06",text:"식순표 작성·사회자 공유",cat:"ceremony"},
     {id:"b07",text:"식전영상·MR 음원 준비 (USB)",cat:"ceremony"},
     {id:"b08",text:"본식 부케 셀렉",cat:"flower"},
@@ -97,9 +99,13 @@ const CL_TEMPLATE=[
 /* Calculate actual months-before with ratio scaling */
 const BASE_PREP_MONTHS = 14; // 기본 준비 기간 (가장 여유로운 경우)
 
+/* 준비 기간이 짧은 커플은 단계를 비율로 압축해요.
+   기준은 "오늘"이 아니라 "준비를 시작한 날(planStart)" — 오늘 기준으로 하면
+   결혼일이 다가올수록 남은 단계가 계속 뒤로 밀리는 문제가 있었어요. */
+let PLAN_START=null;
 function getAvailableMonths(wd) {
-  if (!wd) return BASE_PREP_MONTHS;
-  const now = new Date(); now.setHours(0,0,0,0);
+  if (!wd || !PLAN_START) return BASE_PREP_MONTHS;
+  const now = new Date(PLAN_START); now.setHours(0,0,0,0);
   const w = new Date(wd); w.setHours(0,0,0,0);
   const diff = (w.getFullYear() - now.getFullYear()) * 12 + (w.getMonth() - now.getMonth());
   return Math.max(diff, 0);
@@ -119,9 +125,17 @@ function calcPhaseDate(mb, wd) {
   d.setMonth(d.getMonth() - mb);
   return d;
 }
+/* 마일스톤(촬영일·셀렉일 등)이 입력돼 있으면, 단계 기간도 실제 일정에 맞춰 움직여요.
+   - 단계 마감 = 그 단계 항목들 중 가장 늦은 실제 마감일
+   - 촬영 후 단계(anchor:"photo")는 촬영일부터 시작 */
 function phaseDates(ph, wd) {
-  const start = calcPhaseDate(scaledMb(ph.mbStart, wd), wd);
-  const end = calcPhaseDate(scaledMb(ph.mbEnd, wd), wd);
+  let start = calcPhaseDate(scaledMb(ph.mbStart, wd), wd);
+  let end = calcPhaseDate(scaledMb(ph.mbEnd, wd), wd);
+  if (!wd) return { start, end };
+  const dls = (ph.items || []).map(i => msDeadline(i.id, MS, wd)).filter(Boolean);
+  if (dls.length) end = new Date(Math.max(...dls));
+  if (ph.anchor === "photo" && MS && MS.photoDate) start = new Date(MS.photoDate);
+  if (start && end && start > end) start = new Date(end);
   return { start, end };
 }
 function phaseStatus(ph, wd) {
@@ -143,8 +157,7 @@ function phaseLabel(ph, wd) {
 }
 function phaseMonthRange(ph, wd) {
   if (!wd) return "";
-  const startD = calcPhaseDate(scaledMb(ph.mbStart, wd), wd);
-  const endD = calcPhaseDate(scaledMb(ph.mbEnd, wd), wd);
+  const { start: startD, end: endD } = phaseDates(ph, wd);
   if (!startD || !endD) return "";
   const sm = startD.getMonth() + 1, em = endD.getMonth() + 1;
   if (sm === em) return sm + "월";
@@ -152,12 +165,12 @@ function phaseMonthRange(ph, wd) {
 }
 function phaseDeadline(ph, wd) {
   if (!wd) return "";
-  const d = calcPhaseDate(scaledMb(ph.mbEnd, wd), wd);
+  const d = phaseDates(ph, wd).end;
   if (!d) return "";
   const w = ["일","월","화","수","목","금","토"];
   return d.getFullYear() + "." + (d.getMonth()+1) + "." + d.getDate() + "(" + w[d.getDay()] + ")";
 }
-function phaseDeadlineDate(ph, wd) { return calcPhaseDate(scaledMb(ph.mbEnd, wd), wd); }
+function phaseDeadlineDate(ph, wd) { return phaseDates(ph, wd).end; }
 
 const CAT={venue:{bg:"#FFF8E1",fg:"#D4A017",n:"웨딩홀",ic:"🏛️"},planner:{bg:P.lavLt,fg:P.lavDk,n:"플래너",ic:"📋"},dress:{bg:"#FCE4EC",fg:"#C62860",n:"드레스",ic:"👗"},makeup:{bg:"#FDF2F8",fg:"#B0408A",n:"메이크업",ic:"💄"},photo:{bg:P.greenLt,fg:P.greenDk,n:"촬영",ic:"📷"},shopping:{bg:"#FFF8E1",fg:"#C8960A",n:"혼수",ic:"🛍️"},honeymoon:{bg:P.blueLt,fg:P.blueDk,n:"신혼여행",ic:"✈️"},ceremony:{bg:P.periLt,fg:P.periDk,n:"예식",ic:"💒"},flower:{bg:"#FCE4EC",fg:"#C62850",n:"부케·꽃",ic:"💐"},family:{bg:P.greenLt,fg:"#5D6E3A",n:"혼주",ic:"👨‍👩‍👧"},etc:{bg:"#F0F0F0",fg:"#707080",n:"기타",ic:"📌"}};
 const TIPS_BY_PHASE=[
@@ -165,7 +178,8 @@ const TIPS_BY_PHASE=[
   [{cat:"드레스",t:"드레스투어는 샵당 1시간, 보통 2~3곳을 하루에 다녀와요.\n샵당 4벌을 피팅하고 1~2벌을 찜해두는 방식이에요.\n투어 시 샵당 피팅비(5~6만원 선)가 발생하니 참고하세요"},{cat:"드레스",t:"드레스샵을 바로 결정하시면(지정) 투어 없이 바로 촬영드레스를 고를 수 있어요.\n피팅비가 들지 않고, 샵에 따라 금액 할인이 가능한 경우도 있다는 평이 있어요.\n시간과 비용 모두 절약할 수 있는 방법이에요"},{cat:"드레스",t:"평일에 드레스샵을 방문하시면 주말보다 선택폭이 넓어요.\n주말에는 본식에 나간 드레스가 빠져 있는 경우가 많아서 보실 수 있는 드레스가 줄어들 수 있거든요"},{cat:"드레스",t:"A라인·머메이드·볼가운 등 라인별로 착용감과 사진 느낌이 완전히 달라요.\n최소 3가지 라인을 입어보셔야 본인에게 맞는 실루엣을 찾으실 수 있어요"},{cat:"메이크업",t:"메이크업샵마다 고유한 스타일이 있어요.\n자연스럽고 청순한 느낌, 화사한 과즙상, 우아하고 화려한 느낌 등 각 샵의 인스타그램 피드를 보시면 차이가 확연히 보여요"},{cat:"메이크업",t:"촬영 메이크업은 스튜디오 조명에 색감이 날아가기 때문에 본식보다 색조를 진하게 올리는 게 일반적이에요.\n본식 메이크업은 하객분들과 가까이서 보시니 자연스럽게 하는 편이고요.\n색조 강도는 아티스트에게 요청하시면 조정 가능하니, 미리 레퍼런스 사진을 준비해가시면 소통이 수월해요"},{cat:"메이크업",t:"드레스투어 후 드레스를 입은 느낌에 맞춰 메이크업 스타일을 결정하시면 전체적인 조화가 잘 맞는다는 평이 많아요.\n계약 조건에 따라 다를 수 있으니 상담 시 미리 확인해보시면 좋아요"},{cat:"예복",t:"예복 맞춤은 2~3번의 가봉(사이즈 피팅)이 필요해서 최소 3개월 전에 시작하시면 여유로워요.\n체형 변화에 따라 수선이 필요할 수 있어서 촬영 전 완성이 이상적이에요"},{cat:"예복",t:"신랑 예복은 크게 대여·기성복·맞춤 세 가지 방식이 있어요.\n평소 정장을 안 입으시면 대여(10~30만원 선)가 합리적이고, 정장이 하나쯤 필요하시면 기성복(50~80만원 선), 핏과 원단에 투자하고 싶으시면 맞춤(80만원~)을 고려해보세요"},{cat:"예복",t:"맞춤 예복을 하시면 촬영용 대여 2~3벌이 포함되는 경우가 많아요.\n촬영 시 신부 드레스에 맞춰 여러 벌 갈아입어야 하니, 대여 구성이 포함되는지 미리 확인해보시면 좋아요"},{cat:"예복",t:"신부 드레스와의 조화를 고려해서 색상·스타일을 정하시면 좋아요.\n신부가 화려한 드레스를 입으시면 신랑은 심플한 디자인이 어울리는 경우가 많아요.\n셔츠·구두·보타이/넥타이까지 세트로 준비해두시면 당일 편해요"},{cat:"한복",t:"맞춤은 최소 2~3개월, 대여는 1개월 전이면 충분한 경우가 많아요.\n노리개·가방·신발까지 세트로 준비해두시면 당일 허둥대지 않고 완성도가 올라가요"},{cat:"혼수",t:"혼수 품목은 양가 협의 후 리스트를 먼저 작성하시면 효율적이에요.\n인기 가전은 주문 후 배송까지 1~2개월 걸리는 경우도 있어서 미리 알아보시면 안심이에요"}],
   [{cat:"촬영가봉",t:"촬영가봉(촬영용 드레스를 셀렉하고 사이즈를 맞추는 날)은 촬영 3~4주 전에 진행하는 경우가 많아요.\n1시간~1시간 30분 동안 5~6벌을 피팅하고 3~4벌을 셀렉해요.\n사진에 잘 나오는 드레스가 따로 있으니 작가님 의견도 참고해보시면 좋아요"},{cat:"촬영가봉",t:"보통 화이트 2벌 + 컬러 1벌로 구성해요.\n같은 라인끼리 고르면 사진에서 차이가 잘 안 나니, 각기 다른 라인(A라인+머메이드 등)으로 구성하시면 다양한 느낌을 담을 수 있어요"},{cat:"촬영가봉",t:"변형 가능한 드레스(탈부착 소매, 오버스커트 등)를 고르시면 한 벌로 두 가지 느낌을 낼 수 있어요.\n브이넥이나 하이넥은 변형이 어려운 편이에요"},{cat:"촬영가봉",t:"비즈가 많은 화려한 드레스보다 라인·소재가 깔끔하게 드러나는 드레스가 사진에서 더 예쁘게 나온다는 평이 많아요.\n컬러드레스는 조명 때문에 실물보다 한 톤 밝게 찍히는 것도 참고해주세요"},{cat:"촬영가봉",t:"드레스샵 방문 시 10분 전 도착이 중요해요.\n예약 시간 관리가 철저한 샵이 많아서 10분 이상 늦으면 피팅 시간이 줄거나 취소될 수 있어요"},{cat:"촬영 준비",t:"촬영 컨셉과 소품은 두 분이 함께 정하시면 더 특별한 사진이 나와요.\n인스타그램이나 핀터레스트에서 레퍼런스를 10~15장 모아서 작가님과 공유하시면 소통이 훨씬 수월해져요"},{cat:"웨딩관리",t:"피부·등관리·팔 라인은 본식 2~3개월 전에 시작해서 주 1~2회 꾸준히 하시면 눈에 띄는 효과가 나타나요.\n너무 늦게 시작하면 효과를 보기 어렵고, 너무 일찍이면 유지가 힘들어요"},{cat:"웨딩관리",t:"에스테틱(박피, 필링 등)은 촬영 기준 최소 2~3일 전에 받으시는 게 좋아요.\n시술 직후에는 피부가 일시적으로 붉어지거나 민감해질 수 있어서 촬영에 영향을 줄 수 있거든요"}],
   [{cat:"신부 준비",t:"제모를 꼭 하고 오시고, 스킨색이나 흰색 속옷을 챙겨주세요.\n드레스 안에서 속옷 라인이 보이면 사진에 그대로 나오기 때문에 누드브라를 준비하시면 라인감 있는 연출이 가능해요"},{cat:"신랑 준비",t:"면도 꼭 하고 오시고, 런닝은 입지 마세요!\n헤어·메이크업 후에 옷을 갈아입어야 하는데, 머리 위로 벗는 옷(티셔츠)은 헤어가 망가져요.\n앞뒤로 벗을 수 있는 셔츠류가 좋아요"},{cat:"공통 준비",t:"커플룩(커플티, 청바지, 운동화 등)을 준비하시면 캐주얼 컨셉 촬영이 가능해요.\n웨딩밴드(결혼 반지)를 끼고 촬영하시려면 반지가 제때 나오는지 미리 확인해두세요"},{cat:"공통 준비",t:"간단한 간식(한입 크기 김밥, 샌드위치, 과일)을 준비해주시면 좋아요.\n촬영이 4시간 이상이라 중간에 에너지 보충이 필요해요.\n신부님은 립이 지워지지 않게 빨대도 꼭 챙겨주세요"},{cat:"공통 준비",t:"안경은 스튜디오 조명이 렌즈에 반사되어 촬영이 어려울 수 있어요.\n가급적 렌즈를 착용하시고, 안경 컨셉을 원하시면 알을 빼고 테만 준비하시는 게 좋아요"},{cat:"촬영 당일",t:"촬영은 평균 4시간~4시간 30분이에요.\n헤어메이크업부터 피팅까지 2시간 30분~3시간이 별도로 소요되니, 메이크업샵에는 예약시간 10분 전에 도착하시면 여유로워요"},{cat:"촬영 당일",t:"귀중품과 악세서리는 촬영 중 분실 위험이 있으니 가져오지 않으시는 게 좋아요.\n짐이 여기저기 흩어지면 찾기 어려우니 개인 짐은 큰 가방 하나에 모아주세요"},{cat:"촬영 당일",t:"전날은 충분히 주무시고, 야식과 짠 음식은 피해주시면 좋아요.\n짠 음식은 얼굴이 부을 수 있어서 촬영 사진에 영향을 줄 수 있거든요"},{cat:"촬영 비용",t:"헬퍼이모님(촬영·본식에서 드레스와 메이크업을 케어해주시는 분) 비용은 1회 25만원 선이라는 평이 있어요(업체마다 상이).\n서울/경기/인천권 기준이고, 5시간 이상·야외촬영 시 별도 비용이 발생할 수 있어요.\n메이크업 아침 얼리스타트 시 샵에 따라 5~25만원이 추가될 수 있으니 미리 확인해두세요"}],
-  [{cat:"앨범 셀렉",t:"앨범 셀렉(앨범·액자에 들어갈 사진을 고르는 과정)은 보통 2~3시간 정도 걸려요.\n기본 구성 외 페이지 추가 시 약 3.3만원/장 선이에요(스튜디오마다 상이).\n원본 데이터도 이날 함께 받아오세요"},{cat:"청첩장",t:"모바일 청첩장은 결혼 6~8주 전, 종이 청첩장은 2달 전부터 발송하시면 적당해요.\n제작에 보통 10일 소요되니 역산해서 준비하시면 좋아요"},{cat:"청첩장",t:"발송 전에 오탈자를 꼭 확인해보세요.\n날짜·시간·장소·계좌번호는 한 번 발송하면 수정이 안 되니 여러 번 체크하시면 안심이에요"},{cat:"청첩장",t:"주소 수집은 생각보다 시간이 걸려요.\n답장이 늦는 분들도 계시니 발송 3주 전부터 미리 연락해서 모아두시면 여유로워요"},{cat:"촬영 파일",t:"원본 파일은 클라우드+USB로 이중 백업해두시면 안전해요.\n하드 고장이나 분실로 원본을 잃으면 복구가 불가능하니 소중한 추억은 꼭 이중 저장해주세요"},{cat:"부케",t:"생화부케는 사진이 자연스럽고 예쁘지만 하루면 시드는 경우가 많아요.\n조화부케는 오래 간직할 수 있고 사전 준비도 편해요.\n생화를 원하시면 시들지 않는 시간 안에 촬영이 끝나도록 일정을 조율해보세요"}],
+  [{cat:"앨범 셀렉",t:"앨범 셀렉(앨범·액자에 들어갈 사진을 고르는 과정)은 보통 2~3시간 정도 걸려요.\n기본 구성 외 페이지 추가 시 약 3.3만원/장 선이에요(스튜디오마다 상이).\n원본 데이터도 이날 함께 받아오세요"},{cat:"촬영 파일",t:"원본 파일은 클라우드+USB로 이중 백업해두시면 안전해요.\n하드 고장이나 분실로 원본을 잃으면 복구가 불가능하니 소중한 추억은 꼭 이중 저장해주세요"}],
+  [{cat:"청첩장",t:"모바일 청첩장은 결혼 6~8주 전, 종이 청첩장은 2달 전부터 발송하시면 적당해요.\n제작에 보통 10일 소요되니 역산해서 준비하시면 좋아요"},{cat:"청첩장",t:"발송 전에 오탈자를 꼭 확인해보세요.\n날짜·시간·장소·계좌번호는 한 번 발송하면 수정이 안 되니 여러 번 체크하시면 안심이에요"},{cat:"청첩장",t:"주소 수집은 생각보다 시간이 걸려요.\n답장이 늦는 분들도 계시니 발송 3주 전부터 미리 연락해서 모아두시면 여유로워요"},{cat:"부케",t:"생화부케는 사진이 자연스럽고 예쁘지만 하루면 시드는 경우가 많아요.\n조화부케는 오래 간직할 수 있고 사전 준비도 편해요.\n생화를 원하시면 시들지 않는 시간 안에 촬영이 끝나도록 일정을 조율해보세요"}],
   [{cat:"신혼집",t:"입주 시기를 결혼식과 맞춰 계획해두시면 이사 스트레스가 훨씬 줄어들어요.\n결혼 전후 1~2주 안에 입주하시는 분이 많아요"},{cat:"신혼집",t:"인기 가전(냉장고, 세탁기 등)은 주문 후 배송까지 4~6주 걸리는 경우도 있어요.\n입주일을 역산해서 미리 발주하셔야 빈 집에서 기다리는 일이 없어요"},{cat:"하객·섭외",t:"축가는 최소 2개월 전에 미리 부탁드리는 게 좋아요.\n연습 시간이 필요하기도 하고, 갑자기 부탁하시면 부담을 느끼실 수 있거든요"},{cat:"하객·섭외",t:"하객 명단은 최근 1년 내 연락했던 분들 기준으로 정리하시면 효율적이에요.\n참석 여부를 엑셀로 관리하시면 식대 인원 산정에도 도움이 돼요"},{cat:"답례품",t:"부담스럽지 않으면서 실용적인 구성이 만족도가 높다는 평이 많아요.\n요즘은 대용량보다 소소하지만 센스 있는 구성이 트렌드예요"},{cat:"폐백",t:"요즘 생략하시는 추세이기도 하지만, 양가 부모님 의견을 먼저 여쭤보시면 좋아요.\n직접 준비 시 음식·그릇·인력도 따로 챙겨야 해서 생각보다 손이 많이 간다는 평이 있어요"},{cat:"혼인신고",t:"혼인신고서는 미리 작성해두시면 편해요.\n증인 2명의 서명과 주민번호가 필요하니 미리 부탁해두시고, 혼인신고는 결혼식 전후 어느 때든 가능해요"}],
   [{cat:"본식 가봉",t:"본식가봉(본식용 드레스를 셀렉하고 사이즈를 맞추는 날)은 본식 3주~1달 전에 진행하는 경우가 많아요.\n1시간 동안 4벌을 피팅하고 1벌을 셀렉하는 방식이에요.\n촬영드레스와 다른 느낌을 고르시면 두 번의 다른 분위기를 남길 수 있어요"},{cat:"식순·음향",t:"식순표는 사회자와 최소 1주 전에 공유해두시면 안심이에요.\nMR 음원은 USB에 담아 준비하시고, 블루투스 연결은 예식장 환경에 따라 불안정할 수 있어서 유선이 안전하다는 평이 있어요"},{cat:"식순·음향",t:"식전영상은 최소 2주 전에 완성해서 예식장에 전달하셔야 해요.\n예식장마다 지원하는 USB 포맷이 다를 수 있으니 미리 확인하시면 당일 당황하지 않아요"},{cat:"포토테이블",t:"사진은 어린 시절 → 학창시절 → 연애시절 → 웨딩 순으로 다양하게 준비하시면 하객분들이 대기 시간에 즐겁게 보신답니다.\n액자 크기와 배치도 미리 구상해두시면 당일 셋팅이 수월해요"},{cat:"피부관리",t:"본식 전에는 새로운 피부 시술은 피해주시는 게 좋아요.\n예상치 못한 부작용이 생기면 본식 사진에 영향을 줄 수 있으니, 지금 컨디션을 유지하는 데 집중해주세요"},{cat:"비상키트",t:"바늘+실, 양면테이프, 밴드, 진통제, 여분 스타킹, 물티슈 등을 미리 챙겨두시면 든든해요.\n실제로 당일에 드레스 단추가 빠지거나 스타킹이 올 나가는 경우가 꽤 있다고 해요"},{cat:"축의금",t:"축의금 담당은 경험이 있고 신뢰할 수 있는 분께 맡기시면 안심이에요.\n하객이 많으시면 봉투 정리할 때 손이 까지지 않도록 장갑도 함께 준비해두세요"},{cat:"본식 당일",t:"반지, 혼인서약서, 감사 봉투, 신혼여행 여권은 빠뜨리기 쉬우니 전날 밤에 한 곳에 모아서 체크해두세요.\n신혼여행이 해외라면 여권 유효기간도 꼭 확인하세요"},{cat:"비용 참고",t:"업체별 위약금 규정은 각 업체마다 상이하니 계약 시 꼭 확인해두세요.\n펌·염색·네일·붙임머리는 메이크업 비용과 별도 결제인 경우가 대부분이에요"}],
   [{cat:"웨딩데이",t:"결혼 전날 서로에게 편지를 써서 당일 아침에 교환해보시는 건 어떨까요?\n바쁜 준비 속에 못 했던 말을 전할 수 있고, 평생 간직할 소중한 추억이 돼요"},{cat:"웨딩데이",t:"당일은 예상치 못한 소소한 해프닝이 있을 수 있어요.\n그것도 다 추억이니 너무 완벽을 추구하시기보다 그 순간을 함께 즐겨보세요"},{cat:"웨딩데이",t:"결혼식이 끝나면 양가 부모님께 꼭 직접 전화 한 통 드려보세요.\n당일은 정신없어서 인사를 제대로 못 하는 경우가 많은데, 감사 인사 한마디가 정말 큰 의미가 된답니다"},{cat:"웨딩데이",t:"거울 앞에서 자연스럽게 웃는 연습을 해보시면 본식 사진이 훨씬 예쁘게 나와요.\n입만 웃는 게 아니라 눈, 광대, 입이 함께 움직여야 자연스러운 미소가 된답니다"},{cat:"웨딩데이",t:"두 분이 함께 준비해온 이 과정 자체가 가장 큰 선물이에요.\n행복한 결혼생활의 시작을 진심으로 축하드립니다"}]
@@ -178,10 +192,39 @@ const PHOTO_GUIDE=[
   {title:"⏰ 촬영 당일 흐름",items:["헤어메이크업 + 드레스피팅: 약 2시간 30분 ~ 3시간","메이크업샵 → 드레스 픽업 → 피팅 → 스튜디오 이동","촬영 평균 4~5시간, 초과 시 추가 비용(헬퍼비)","촬영 후 사진 셀렉 예약 가능, 앨범·수정본 출고까지 3~4개월","촬영 당일 물은 적당히만, 친구 대동은 최소한으로"]}
 ];
 
-/* Milestone dependencies: item_id → {ms: milestone_key, days: days_before} */
-const MS_DEPS={p01:{ms:"fittingDate",days:0},p02:{ms:"fittingDate",days:0},p03:{ms:"photoDate",days:14},p04:{ms:"photoDate",days:7},p05:{ms:"fittingDate",days:0},p06:{ms:"fittingDate",days:0},p07:{ms:"photoDate",days:60},ph01:{ms:"photoDate",days:1},ph02:{ms:"photoDate",days:7},ph03:{ms:"photoDate",days:0},ph04:{ms:"photoDate",days:7},b01:{ms:"weddingAuto",days:42},b02:{ms:"weddingAuto",days:42}};
-function msDeadline(itemId,milestones,wd){const dep=MS_DEPS[itemId];if(!dep)return null;let dt;if(dep.ms==="weddingAuto"){if(!wd)return null;dt=wd;}else{dt=milestones?.[dep.ms];}if(!dt)return null;const d=new Date(dt);d.setDate(d.getDate()-dep.days);return d;}
-function fresh(){return{groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],milestones:{photoDate:"",fittingDate:""},checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
+/* ═══ 일정 연결 고리 ═══
+   촬영 전: 촬영일·촬영가봉일에서 거꾸로 계산
+   촬영 후: 촬영 → 셀렉 → (보정·앨범 제작) → 수정본 수령 → 모바일 청첩장 → 결혼식
+   셀렉 기한은 ①촬영 후 2개월 ②청첩장 일정에서 거꾸로 계산한 날 중 더 빠른 날 */
+const SCHED={selectWithin:60,retouchDays:90,mobileMake:56,mobileSend:42};
+let MS={};/* 현재 커플의 milestones — 테마(P)처럼 App 렌더 때 갱신 */
+const MS_DEPS={p01:{ms:"fittingDate",days:0},p02:{ms:"fittingDate",days:0},p03:{ms:"photoDate",days:14},p04:{ms:"photoDate",days:7},p05:{ms:"fittingDate",days:0},p06:{ms:"fittingDate",days:0},p07:{ms:"photoDate",days:60},ph01:{ms:"photoDate",days:1},ph02:{ms:"photoDate",days:7},ph03:{ms:"photoDate",days:0},ph04:{ms:"photoDate",days:7},
+  sl01:{ms:"select"},sl02:{ms:"select"},b04:{ms:"retouch"},
+  sl03:{ms:"weddingAuto",days:SCHED.mobileMake},sl04:{ms:"weddingAuto",days:SCHED.mobileSend},
+  b01:{ms:"weddingAuto",days:42},b02:{ms:"weddingAuto",days:42}};
+const addDays=(dt,n)=>{const d=new Date(dt);d.setDate(d.getDate()+n);return d;};
+const md=d=>(d.getMonth()+1)+"/"+d.getDate();
+/* 셀렉 기한: 셀렉일이 잡혀 있으면 그 날, 아니면 두 기준 중 빠른 날 */
+function selectInfo(milestones,wd){const m=milestones||{};
+  if(m.selectDate)return{date:new Date(m.selectDate),why:"셀렉 예약일"};
+  const c=[];if(m.photoDate)c.push({date:addDays(m.photoDate,SCHED.selectWithin),why:"촬영 후 2개월 이내"});
+  if(wd)c.push({date:addDays(wd,-(SCHED.mobileMake+SCHED.retouchDays)),why:"청첩장 일정 역산"});
+  if(!c.length)return null;return c.reduce((a,b)=>b.date<a.date?b:a);}
+function retouchInfo(milestones,wd){const s=selectInfo(milestones,wd);if(!s)return null;return{date:addDays(s.date,SCHED.retouchDays),why:(milestones?.selectDate?"셀렉일":"셀렉 기한")+" + 약 3개월 (보정·앨범 제작)"};}
+function msInfo(itemId,milestones,wd){const dep=MS_DEPS[itemId];if(!dep)return null;
+  if(dep.ms==="select")return selectInfo(milestones,wd);
+  if(dep.ms==="retouch")return retouchInfo(milestones,wd);
+  let dt;if(dep.ms==="weddingAuto"){if(!wd)return null;dt=wd;}else{dt=milestones?.[dep.ms];}if(!dt)return null;
+  return{date:addDays(dt,-dep.days),why:null};}
+function msDeadline(itemId,milestones,wd){return msInfo(itemId,milestones,wd)?.date||null;}
+/* 연결 고리가 끊길 때 경고: 수정본이 청첩장 제작보다 늦게 나오는 경우 등 */
+function msWarn(itemId,milestones,wd){if(!wd)return null;const m=milestones||{};
+  const r=retouchInfo(m,wd);const make=addDays(wd,-SCHED.mobileMake);
+  if((itemId==="b04"||itemId==="sl03")&&r&&r.date>make)return"수정본 예상 수령("+md(r.date)+")이 모바일 청첩장 제작 기한("+md(make)+")보다 늦어요. 청첩장에 쓸 사진 몇 장만 먼저 보정해 줄 수 있는지 스튜디오에 문의해보세요";
+  if(itemId==="sl01"&&m.photoDate&&!m.selectDate){const byPhoto=addDays(m.photoDate,SCHED.selectWithin);const byInv=addDays(wd,-(SCHED.mobileMake+SCHED.retouchDays));if(byInv<byPhoto)return"청첩장 일정을 맞추려면 촬영 후 2개월보다 빠른 "+md(byInv)+"까지 셀렉하셔야 해요";}
+  return null;}
+const CL_VER=2;
+function fresh(){return{clVer:CL_VER,planStart:new Date().toISOString().slice(0,10),groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],milestones:{photoDate:"",fittingDate:"",selectDate:""},checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
 function migrateData(d){if(!d)return d;if(!d.theme)d.theme="garden";if(!d.motto)d.motto="";if(!d._deletedIds)d._deletedIds=[];if(!d.dismissedReminders)d.dismissedReminders=[];if(!d.milestones)d.milestones={photoDate:"",fittingDate:""};if(d.milestones.mainFittingDate!==undefined)delete d.milestones.mainFittingDate;
   if(d.keyDates)d.keyDates=d.keyDates.filter(k=>k.id!=="auto_photo"&&k.id!=="auto_fitting");
   if(!d.checklist)return d;
@@ -189,13 +232,17 @@ function migrateData(d){if(!d)return d;if(!d.theme)d.theme="garden";if(!d.motto)
   const templateIds=new Set();CL_TEMPLATE.forEach(p=>p.items.forEach(i=>templateIds.add(i.id)));
   const existingIds=new Set();d.checklist.forEach(p=>(p.items||[]).forEach(i=>{if(!i.custom)existingIds.add(i.id);}));
   const hasNewItems=[...templateIds].some(id=>!existingIds.has(id));
-  const needsMigration=d.checklist.some(p=>p.mbStart===undefined)||hasNewItems;
+  const needsMigration=d.checklist.some(p=>p.mbStart===undefined)||hasNewItems||(d.clVer||1)<CL_VER;
   if(!needsMigration)return d;
   const cl=d.checklist;
   const itemStates={};cl.forEach(p=>{(p.items||[]).forEach(i=>{itemStates[i.id]={done:i.done,memo:i.memo||""};});});
-  const customItems={};cl.forEach((p,pi)=>{(p.items||[]).forEach(i=>{if(i.custom){if(!customItems[pi])customItems[pi]=[];customItems[pi].push(i);}});});
-  const newCL=JSON.parse(JSON.stringify(CL_TEMPLATE)).map((p,pi)=>({...p,items:[...p.items.map(i=>({...i,done:itemStates[i.id]?.done||false,memo:itemStates[i.id]?.memo||""})),...(customItems[pi]||[])]}));
-  return{...d,checklist:newCL};}
+  /* 직접 추가한 항목은 같은 이름의 단계로 (이름이 바뀐 단계는 아래 매핑, 그래도 없으면 같은 순서의 단계로) */
+  const RENAMED={"셀렉 & 청첩장":"수정본 & 청첩장"};
+  const labels=CL_TEMPLATE.map(p=>p.label);
+  const customItems={};cl.forEach((p,pi)=>{(p.items||[]).forEach(i=>{if(i.custom){const lb=RENAMED[p.label]||p.label;let ti=labels.indexOf(lb);if(ti<0)ti=Math.min(pi,labels.length-1);if(!customItems[ti])customItems[ti]=[];customItems[ti].push(i);}});});
+  const deleted=new Set(d._deletedIds||[]);
+  const newCL=JSON.parse(JSON.stringify(CL_TEMPLATE)).map((p,pi)=>({...p,items:[...p.items.filter(i=>!deleted.has(i.id)).map(i=>({...i,done:itemStates[i.id]?.done||false,memo:itemStates[i.id]?.memo||""})),...(customItems[pi]||[])]}));
+  return{...d,clVer:CL_VER,checklist:newCL};}
 
 function getDday(d){if(!d)return null;const t=new Date();t.setHours(0,0,0,0);const w=new Date(d);w.setHours(0,0,0,0);return Math.ceil((w-t)/864e5);}
 function fmtDate(d){if(!d)return"";const o=new Date(d),w=["일","월","화","수","목","금","토"];return o.getFullYear()+"."+(o.getMonth()+1)+"."+o.getDate()+"("+w[o.getDay()]+")";}
@@ -374,9 +421,9 @@ function CLTab({data,setData}){const wd=data.weddingDate;const[memoId,setMemoId]
       })()}
     </Modal>
     <Modal title="항목 추가" open={addPi!==null} onClose={()=>setAddPi(null)}><div style={{marginBottom:18}}><label style={S.lbl}>할 일</label><input style={MI} placeholder="예: 피부관리" value={addF.text} onChange={e=>setAddF({...addF,text:e.target.value})}/></div><div style={{marginBottom:18}}><label style={S.lbl}>카테고리</label><select style={MI} value={addF.cat} onChange={e=>setAddF({...addF,cat:e.target.value})}>{Object.entries(CAT).map(([k,c])=><option key={k} value={k}>{c.ic} {c.n}</option>)}<option value="__custom__">✏️ 직접 입력</option></select></div>{addF.cat==="__custom__"&&<div style={{marginBottom:18}}><label style={S.lbl}>카테고리명</label><input style={MI} value={addF.customCatName} onChange={e=>setAddF({...addF,customCatName:e.target.value})}/></div>}<button style={{...S.btn,width:"100%"}} onClick={addItem}>추가</button></Modal>
-    {wd&&<div style={{...S.card,marginBottom:20,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,padding:"16px 18px"}}><div style={{fontSize:13,color:P.periDk,fontWeight:600,marginBottom:10}}>주요 일정 역산</div><div style={{fontSize:12,color:P.textSub,marginBottom:12}}>촬영일·가봉일이 정해지면 관련 항목에 마감일이 자동으로 표시돼요</div>
+    {wd&&<div style={{...S.card,marginBottom:20,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,padding:"16px 18px"}}><div style={{fontSize:13,color:P.periDk,fontWeight:600,marginBottom:10}}>주요 일정 역산</div><div style={{fontSize:12,color:P.textSub,marginBottom:12,lineHeight:1.6}}>촬영일·가봉일이 정해지면 관련 항목에 마감일이 자동으로 표시돼요.<br/>촬영 후 일정은 <b>셀렉 → 보정·앨범 제작(약 3개월) → 수정본 수령 → 모바일 청첩장</b> 순서로 이어서 계산돼요</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {[{k:"photoDate",l:"촬영일"},{k:"fittingDate",l:"촬영가봉일"}].map(m=><div key={m.k} style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:80}}>{m.l}</label><input type="date" style={{...MI,padding:"8px 10px",fontSize:13,flex:1}} value={data.milestones?.[m.k]||""} onChange={e=>setData({...data,milestones:{...data.milestones,[m.k]:e.target.value}})}/></div>)}
+        {[{k:"fittingDate",l:"촬영가봉일"},{k:"photoDate",l:"촬영일"},{k:"selectDate",l:"셀렉일 (선택)"}].map(m=><div key={m.k} style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:80}}>{m.l}</label><input type="date" style={{...MI,padding:"8px 10px",fontSize:13,flex:1}} value={data.milestones?.[m.k]||""} onChange={e=>setData({...data,milestones:{...data.milestones,[m.k]:e.target.value}})}/></div>)}
       </div>
     </div>}
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
@@ -388,40 +435,124 @@ function CLTab({data,setData}){const wd=data.weddingDate;const[memoId,setMemoId]
         return<div key={pi} style={{...S.card,borderLeft:"4px solid "+(isOverdue?"#E57373":st==="current"?P.blue:st==="past"?P.blueLt:"#E0E0E0"),padding:"20px 18px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexWrap:"wrap",gap:6}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{width:26,height:26,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",background:allD?P.green:isOverdue?"#E57373":st==="current"?P.blue:"#E0E0E0"}}>{allD?"✓":""}</span><span style={{fontSize:18,fontWeight:400,color:P.text,fontFamily:HW}}>{ph.emoji} {ph.label}</span><span style={{fontSize:13,color:P.textMuted}}>{dc}/{ph.items.length}</span></div><div style={{display:"flex",alignItems:"center",gap:6}}>{phaseMonthRange(ph,wd)&&<span style={{padding:"3px 10px",borderRadius:8,fontSize:12,fontWeight:600,background:st==="current"?P.blueLt:P.periLt,color:st==="current"?P.blueDk:P.periDk}}>{phaseMonthRange(ph,wd)}</span>}<button style={{...S.ebtn,fontSize:11,padding:"4px 10px",background:editMode?P.periDk:"",color:editMode?"#fff":""}} onClick={()=>setEditMode(!editMode)}>{editMode?"완료":"수정"}</button></div></div>
           <div style={{fontSize:12,color:isOverdue?"#E57373":P.textSub,marginBottom:14,paddingLeft:34,fontWeight:isOverdue?600:400}}>기한 {deadlineStr}{isOverdue?" ⚠️ 지연됨":""}</div>
-          {Object.entries(cg).map(([key,g])=>{const c=CAT[g.cat];return<div key={key} style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:700,color:c?c.fg:P.blueDk,marginBottom:6,paddingLeft:3}}>{c?`${c.ic} ${c.n}`:`✏️ ${g.cn||key}`}</div>{g.items.map(item=>{const msDl=msDeadline(item.id,data.milestones,wd);return<div key={item.id} className="cl-item-wrap" style={{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",borderRadius:11,background:item.done?"#F8F8F8":P.greenBg,opacity:item.done?0.4:1,marginBottom:4,border:"1px solid "+(item.done?"#F0F0F0":P.border)}}><div style={{width:22,height:22,borderRadius:7,border:"2px solid "+(item.done?P.green:P.peri),background:item.done?P.green:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}} onClick={()=>toggle(pi,item.id)}>{item.done?"✓":""}</div><div style={{flex:1,cursor:"pointer",minWidth:0}} onClick={()=>{setMemoId({pi,id:item.id});setMemoTxt(item.memo||"");}}><span style={{textDecoration:item.done?"line-through":"none",fontSize:14,color:P.text}}>{item.text}</span>{msDl&&!item.done&&<span style={{fontSize:11,color:P.periDk,fontWeight:600,marginLeft:6}}>~{msDl.getMonth()+1}/{msDl.getDate()}</span>}{item.memo&&<div style={{fontSize:12,color:P.periDk,marginTop:3,background:P.periLt,padding:"4px 8px",borderRadius:6}}>📝 {item.memo}</div>}</div>{editMode&&<button style={{...S.dbtn,fontSize:14,flexShrink:0}} onClick={()=>rmItem(pi,item.id)}>✕</button>}</div>;})}</div>;})}
+          {Object.entries(cg).map(([key,g])=>{const c=CAT[g.cat];return<div key={key} style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:700,color:c?c.fg:P.blueDk,marginBottom:6,paddingLeft:3}}>{c?`${c.ic} ${c.n}`:`✏️ ${g.cn||key}`}</div>{g.items.map(item=>{const msI=msInfo(item.id,data.milestones,wd);const msDl=msI?.date;const msWhy=msI?.why;const msWn=msWarn(item.id,data.milestones,wd);return<div key={item.id} className="cl-item-wrap" style={{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",borderRadius:11,background:item.done?"#F8F8F8":P.greenBg,opacity:item.done?0.4:1,marginBottom:4,border:"1px solid "+(item.done?"#F0F0F0":P.border)}}><div style={{width:22,height:22,borderRadius:7,border:"2px solid "+(item.done?P.green:P.peri),background:item.done?P.green:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}} onClick={()=>toggle(pi,item.id)}>{item.done?"✓":""}</div><div style={{flex:1,cursor:"pointer",minWidth:0}} onClick={()=>{setMemoId({pi,id:item.id});setMemoTxt(item.memo||"");}}><span style={{textDecoration:item.done?"line-through":"none",fontSize:14,color:P.text}}>{item.text}</span>{msDl&&!item.done&&<span style={{fontSize:11,color:P.periDk,fontWeight:600,marginLeft:6}}>~{msDl.getMonth()+1}/{msDl.getDate()}{msWhy&&<span style={{fontWeight:400,color:P.textMuted}}> · {msWhy}</span>}</span>}{msWn&&!item.done&&<div style={{fontSize:12,color:"#C0504D",marginTop:4,lineHeight:1.5}}>⚠️ {msWn}</div>}{item.memo&&<div style={{fontSize:12,color:P.periDk,marginTop:3,background:P.periLt,padding:"4px 8px",borderRadius:6}}>📝 {item.memo}</div>}</div>{editMode&&<button style={{...S.dbtn,fontSize:14,flexShrink:0}} onClick={()=>rmItem(pi,item.id)}>✕</button>}</div>;})}</div>;})}
           {editMode&&<button style={{...S.ebtn,fontSize:12,padding:"6px 14px",marginTop:4}} onClick={()=>{setAddF({text:"",cat:"etc",customCatName:"",note:""});setAddPi(pi);}}>+ 항목 추가</button>}
         </div>;})}
     </div></div>;}
 
 /* ═══ SDM ═══ */
-const CB_GUIDE_Q={studio:[{k:"mood",l:"원하는 촬영 분위기",opts:["내추럴","로맨틱","빈티지","캐주얼","모던"]},{k:"bg",l:"선호하는 배경",opts:["심플 인물 중심","다양한 세트","자연광/창가","한옥/전통","야외"]}],dress:[{k:"line",l:"선호하는 드레스 라인",opts:["A라인","머메이드","볼가운","슬림라인","아직 모르겠어요"]},{k:"detail",l:"좋아하는 디테일/소재",opts:["레이스/자수","비즈/크리스탈","새틴/광택","오프숄더/오프백","심플 민무늬"]}],makeup:[{k:"mood",l:"메이크업 분위기",opts:["내추럴","화사한 과즙상","우아/클래식","글래머러스"]},{k:"skin",l:"피부 표현 / 포인트 컬러",opts:["촉촉한 윤광","매트/보송","코랄 핑크 립","로즈 레드 립","누드 베이지 립"]}]};
+const CB_EMPTY={mood:"",bg:"",pose:"",props:"",bg_etc:"",pose_etc:"",props_etc:"",line:"",detail:"",skin:"",color:"",extra:""};
+const CB_GUIDE_Q={studio:[{k:"bg",l:"선호하는 배경",etc:"예: 노란 문, 보라 꽃",opts:["정원·꽃","하늘·자연광","컬러 포인트 배경 (문·벽)","심플 인물 중심","야외·로드씬","한옥/전통"]},{k:"pose",l:"선호하는 포즈",etc:"예: 이마 맞대기",opts:["나란히 걷는 샷","마주 보는 샷","안는 샷","뛰는 샷","후라이샷 (안아 올리기)","옆모습·뒷모습","장난스러운 캐주얼 샷"]},{k:"props",l:"활용 예정 소품",etc:"예: 피크민 인형, 어린 시절 포스터",opts:["생화 부케","커플링","커플 스니커즈","베일","풍선","폴라로이드·사진 소품","인형·피규어"]}],dress:[{k:"line",l:"선호하는 드레스 라인",opts:["A라인","머메이드","볼가운","슬림라인","아직 모르겠어요"]},{k:"detail",l:"좋아하는 디테일/소재",opts:["레이스/자수","비즈/크리스탈","새틴/광택","오프숄더/오프백","심플 민무늬"]}],makeup:[{k:"mood",l:"메이크업 분위기",opts:["내추럴","화사한 과즙상","우아/클래식","글래머러스"]},{k:"skin",l:"피부 표현 / 포인트 컬러",opts:["촉촉한 윤광","매트/보송","코랄 핑크 립","로즈 레드 립","누드 베이지 립"]}]};
 function CbGuide({recip,cbG,setCbG,P,S,MI,FONT}){const qs=CB_GUIDE_Q[recip]||[];
   const toggle=(k,opt)=>{setCbG(prev=>{const cur=(prev[k]||"").split("|").filter(Boolean);const next=cur.includes(opt)?cur.filter(x=>x!==opt):[...cur,opt];return{...prev,[k]:next.join("|")};});};
   const isSel=(k,opt)=>(cbG[k]||"").split("|").includes(opt);
   return<div style={{display:"flex",flexDirection:"column",gap:16,marginBottom:18}}>
-    {qs.map(q=><div key={q.k}><label style={S.lbl}>{q.l} <span style={{fontSize:11,color:P.textMuted,fontWeight:400}}>(복수 선택 가능)</span></label><div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:4}}>{q.opts.map(opt=><button type="button" key={opt} onClick={()=>toggle(q.k,opt)} style={{padding:"7px 14px",borderRadius:20,border:"1.5px solid "+(isSel(q.k,opt)?P.periDk:P.border),fontSize:13,fontWeight:isSel(q.k,opt)?600:400,background:isSel(q.k,opt)?P.periDk:"#fff",color:isSel(q.k,opt)?"#fff":P.text,cursor:"pointer",fontFamily:FONT}}>{isSel(q.k,opt)?"✓ ":""}{opt}</button>)}</div></div>)}
-    <div><label style={S.lbl}>추가 요청사항 <span style={{fontSize:11,color:P.textMuted,fontWeight:400}}>(선택)</span></label><div style={{fontSize:12,color:P.textSub,marginBottom:8,lineHeight:1.6,padding:"10px 12px",background:P.periLt+"80",borderRadius:10,whiteSpace:"pre-line"}}>{recip==="studio"?"이런 내용을 적어주시면 좋아요:\n· 원하는 포즈 (뛰는 샷, 안는 샷, 후라이샷 등)\n· 활용하고 싶은 소품 (풍선, 꽃, 비눗방울 등)\n· 커플룩 컨셉 (캐주얼, 청바지 등)\n· 야외촬영 희망 여부":recip==="dress"?"이런 내용을 적어주시면 좋아요:\n· 체형 고민 (팔뚝 커버, 허리 강조 등)\n· 노출 범위 (등/어깨 OK, 소매 있는 드레스 선호 등)\n· 변형 가능한 드레스 선호 여부\n· 참고하는 디자인 레퍼런스가 있다면":"이런 내용을 적어주시면 좋아요:\n· 헤어 스타일 (업스타일, 반묶음, 다운 등)\n· 악세서리 (꽃장식, 티아라 등)\n· 피부 고민이 있다면\n· 촬영/본식 메이크업 차이 요청"}</div><textarea style={{...MI,minHeight:60,resize:"vertical"}} value={cbG.extra} onChange={e=>setCbG(prev=>({...prev,extra:e.target.value}))}/></div>
+    {qs.map(q=><div key={q.k}><label style={S.lbl}>{q.l} <span style={{fontSize:11,color:P.textMuted,fontWeight:400}}>(복수 선택 가능)</span></label><div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:4}}>{q.opts.map(opt=><button type="button" key={opt} onClick={()=>toggle(q.k,opt)} style={{padding:"7px 14px",borderRadius:20,border:"1.5px solid "+(isSel(q.k,opt)?P.periDk:P.border),fontSize:13,fontWeight:isSel(q.k,opt)?600:400,background:isSel(q.k,opt)?P.periDk:"#fff",color:isSel(q.k,opt)?"#fff":P.text,cursor:"pointer",fontFamily:FONT}}>{isSel(q.k,opt)?"✓ ":""}{opt}</button>)}</div>{q.etc&&<input style={{...MI,marginTop:8,padding:"8px 12px",fontSize:13}} placeholder={"직접 입력 (쉼표로 구분) · "+q.etc} value={cbG[q.k+"_etc"]||""} onChange={e=>{const v=e.target.value;setCbG(prev=>({...prev,[q.k+"_etc"]:v}));}}/>}</div>)}
+    <div><label style={S.lbl}>추가 요청사항 <span style={{fontSize:11,color:P.textMuted,fontWeight:400}}>(선택)</span></label><div style={{fontSize:12,color:P.textSub,marginBottom:8,lineHeight:1.6,padding:"10px 12px",background:P.periLt+"80",borderRadius:10,whiteSpace:"pre-line"}}>{recip==="studio"?"이런 내용을 적어주시면 좋아요:\n· 표정 관련 요청 (활짝 웃는 것보다 은은한 미소가 편해요 등)\n· 소품을 어느 컷에서 쓰고 싶은지 (드레스 컷 1장, 캐주얼 컷 1장 등)\n· 커플룩 컨셉 (캐주얼, 청바지 등)\n· 배경·촬영 순서는 작가님께 맡길지 여부":recip==="dress"?"이런 내용을 적어주시면 좋아요:\n· 체형 고민 (팔뚝 커버, 허리 강조 등)\n· 노출 범위 (등/어깨 OK, 소매 있는 드레스 선호 등)\n· 변형 가능한 드레스 선호 여부\n· 참고하는 디자인 레퍼런스가 있다면":"이런 내용을 적어주시면 좋아요:\n· 헤어 스타일 (업스타일, 반묶음, 다운 등)\n· 악세서리 (꽃장식, 티아라 등)\n· 피부 고민이 있다면\n· 촬영/본식 메이크업 차이 요청"}</div><textarea style={{...MI,minHeight:60,resize:"vertical"}} value={cbG.extra} onChange={e=>setCbG(prev=>({...prev,extra:e.target.value}))}/></div>
   </div>;}
+/* ═══ 스튜디오 컨셉 보드 PPT — 르안 스튜디오 전달용 시안 템플릿 기준 ═══ */
+const DK={bg:"FDFBF8",text:"2E2925",brown:"6B4F3A",hl:"E8C99A",head:"F1E9DD",line:"DCD2C5",cell:"FAF6F0",sub:"9A8F84",guide:"A08A70"};
+function buildStudioDeck(pptx,r,liked,{data,vendors,photos}){
+  const F="Pretendard",FB="Pretendard SemiBold";let page=0;
+  const newSlide=()=>{const s=pptx.addSlide();s.background={color:DK.bg};page++;if(page>1)s.addText(String(page),{x:11.46,y:7.12,w:1.39,h:0.25,fontSize:9,fontFace:F,color:DK.sub,align:"right"});return s;};
+  const tw=(t,pt)=>[...String(t)].reduce((w,ch)=>w+(/[\u3131-\uD79D]/.test(ch)?1:ch===" "?0.35:0.6),0)*pt/72;
+  /* 하이라이트 라벨 (베이지 형광펜 + 제목) */
+  const label=(s,t,x,y,sub)=>{const w=tw(t,20)+0.12;s.addShape(pptx.ShapeType.rect,{x:x-0.05,y:y+0.13,w,h:0.3,fill:{color:DK.hl},line:{color:DK.hl,width:0}});s.addText(t,{x,y:y-0.05,w:w+0.4,h:0.5,fontSize:20,fontFace:FB,color:DK.text,margin:0});if(sub)s.addText(sub,{x:x+w+0.15,y:y,w:12.3-(x+w),h:0.42,fontSize:16,fontFace:F,color:DK.brown,margin:0});};
+  const isGuide=t=>/\[|「/.test(t||"");
+  const runs=(lines,pt)=>{const out=[];(lines||[]).forEach((ln,i)=>{const g=isGuide(ln);out.push({text:"- "+ln.replace(/^[-·•]\s*/,""),options:{fontSize:pt,fontFace:F,color:g?DK.guide:DK.text,italic:g,breakLine:i<lines.length-1}});});return out.length?out:[{text:" ",options:{fontSize:pt}}];};
+  const img=(s,p,x,y,w,h)=>{if(!p)return;try{s.addImage({data:p.src,x,y,w,h,sizing:{type:"cover",w,h}});}catch(e){}};
+  const ph=(s,x,y,w,h,t)=>{s.addShape(pptx.ShapeType.rect,{x,y,w,h,fill:{color:DK.cell},line:{color:DK.line,width:1,dashType:"dash"}});if(t)s.addText(t,{x,y,w,h,fontSize:10,fontFace:F,color:DK.sub,align:"center",valign:"middle"});};
+  const cellH={fill:{color:DK.head},fontFace:FB,fontSize:13,color:DK.text,align:"center",valign:"middle"};
+  const cell={fontFace:F,fontSize:13,color:DK.text,align:"center",valign:"middle"};
+  const border={type:"solid",pt:0.75,color:DK.line};
+  const byPick=type=>{const vs=(vendors||[]).filter(v=>v.type===type);if(!vs.length)return null;const cnt=v=>(photos||[]).filter(p=>p.vid===v.id&&p.liked).length;return vs.slice().sort((a,b)=>cnt(b)-cnt(a))[0];};
+  const studio=byPick("studio"),dress=byPick("dress"),makeup=byPick("makeup");
+  const pd=data?.milestones?.photoDate;const W=["일","월","화","수","목","금","토"];
+  const dateStr=pd?(()=>{const d=new Date(pd);return d.getFullYear()+". "+(d.getMonth()+1)+". "+d.getDate()+".("+W[d.getDay()]+")";})():"[촬영 일정을 적어주세요]";
+  const sName=studio?.name||"";
+
+  /* 1. 표지 */
+  let s=newSlide();
+  const title=(sName?sName+" ":"")+"웨딩 촬영";const tW=tw(title,40);
+  s.addShape(pptx.ShapeType.rect,{x:1.0,y:2.35,w:Math.min(tW*0.92,11),h:0.36,fill:{color:DK.hl},line:{color:DK.hl,width:0}});
+  s.addText(title,{x:1.06,y:1.94,w:11,h:0.83,fontSize:40,fontFace:F,color:DK.text,margin:0});
+  s.addText("오늘 하루 잘 부탁드리겠습니다 🙂",{x:1.06,y:3.18,w:8,h:0.36,fontSize:16,fontFace:F,color:DK.brown,margin:0});
+  s.addShape(pptx.ShapeType.line,{x:1.06,y:3.89,w:11.11,h:0,line:{color:DK.line,width:1}});
+  s.addTable([[{text:"일정",options:{...cellH,fontFace:F}},{text:dateStr,options:cell}],[{text:"스튜디오",options:cellH},{text:sName||"[스튜디오명]",options:cell}],[{text:"신랑",options:cellH},{text:data?.groomName||"",options:cell}],[{text:"신부",options:cellH},{text:data?.brideName||"",options:cell}]],{x:1.06,y:4.25,w:5.14,colW:[1.6,3.54],rowH:0.42,border});
+
+  /* 2. 함께해 주시는 분들 · 선호하는 분위기 · 소품 */
+  s=newSlide();
+  label(s,"함께해 주시는 분들",0.5,0.35);
+  const team=[["드레스",dress?.name||""],["헤어·메이크업",makeup?.name||""],["플래너",""]];
+  s.addTable([[{text:"구분",options:{...cellH,fontFace:F}},{text:"업체",options:{...cellH,fontFace:F}}],...team.map(([a,b])=>[{text:a,options:cellH.fontFace?{...cell,fontFace:FB}:cell},{text:b||"[업체·담당자명]",options:{...cell,color:b?DK.text:DK.guide,italic:!b}}])],{x:0.5,y:1.0,w:3.89,colW:[1.4,2.49],rowH:0.6,border:{type:"solid",pt:0.75,color:DK.text}});
+  label(s,"선호하는 분위기",4.72,0.35);
+  const strip=liked.slice(0,7),sw=1.09,sg=0.08;strip.forEach((p,i)=>img(s,p,4.72+i*(sw+sg),0.94,sw,2.15));
+  for(let i=strip.length;i<7;i++)ph(s,4.72+i*(sw+sg),0.94,sw,2.15,i===strip.length?"참고 사진":"");
+  s.addShape(pptx.ShapeType.rect,{x:4.72,y:3.23,w:8.12,h:0.57,fill:{color:DK.head},line:{color:DK.line,width:0.75}});
+  s.addText(r.summary||"[선호하는 분위기를 적어주세요]",{x:4.82,y:3.23,w:7.92,h:0.57,fontSize:12,fontFace:F,color:DK.text,align:"center",valign:"middle"});
+  label(s,"소품",0.5,3.95);
+  const props=(r.props||[]).slice(0,5);const pw=2.35,pg=0.15;
+  for(let i=0;i<5;i++){const x=0.5+i*(pw+pg);ph(s,x,4.6,pw,1.5,props[i]?"소품 사진":"");s.addShape(pptx.ShapeType.rect,{x,y:6.2,w:pw,h:0.36,fill:{color:DK.head},line:{color:DK.line,width:0.75}});s.addText(props[i]||"",{x,y:6.2,w:pw,h:0.36,fontSize:11,fontFace:F,color:DK.text,align:"center",valign:"middle"});}
+
+  /* 3. 저희 특징 */
+  s=newSlide();
+  label(s,"저희 특징",0.5,0.35,"구체적으로 디렉션해 주시면 최대한 따라 해보겠습니다");
+  const feat=(who)=>[[{text:who,options:{...cell,fontFace:FB,fontSize:15,fill:{color:DK.cell},rowspan:2}},{text:who+" 특징",options:{...cellH,fontFace:F}}],[{text:runs(["[웃을 때 표정, 선호하는 각도 등을 적어주세요]","[어색해지는 포인트가 있다면 적어주세요]"],12),options:{align:"left",valign:"top",margin:[6,10,6,10]}}]];
+  s.addTable([...feat("신부"),...feat("신랑")],{x:0.5,y:1.3,w:6.08,colW:[1.2,4.88],rowH:[0.42,1.9,0.42,1.9],border});
+  ph(s,6.83,1.3,3.08,2.31,"평소 사진");ph(s,6.83,3.71,3.08,2.31,"평소 사진");ph(s,10.15,1.3,2.56,4.72,"평소 사진");
+  s.addText("평소 사진 찍는 모습",{x:6.83,y:6.12,w:5.88,h:0.37,fontSize:12,fontFace:F,color:DK.text,align:"center"});
+
+  /* 4. 컨셉별 (의상 장표 레이아웃: 왼쪽 정리표 + 오른쪽 선호 느낌 사진) */
+  const circ="①②③④⑤⑥⑦⑧";
+  (r.concepts||[]).forEach((c,ci)=>{s=newSlide();label(s,"컨셉 "+circ[ci],0.44,0.12,c.name||"");
+    const rows=[["의상",c.outfit],["헤어",c.hair],["소품",c.props],["포즈",c.pose]];
+    s.addTable([[{text:"구분",options:{...cellH,fontFace:F}},{text:"내용",options:{...cellH,fontFace:F}}],...rows.map(([k,v])=>[{text:k,options:{...cell,fontFace:FB,fill:{color:DK.cell}}},{text:v||"[여기에 적어주세요]",options:{...cell,align:"left",margin:[4,10,4,10],color:v?DK.text:DK.guide,italic:!v}}])],{x:0.44,y:0.75,w:5.0,colW:[1.1,3.9],rowH:[0.42,1.45,1.45,1.45,1.45],border});
+    s.addShape(pptx.ShapeType.rect,{x:5.7,y:0.75,w:7.19,h:0.42,fill:{color:DK.head},line:{color:DK.line,width:0.75}});
+    s.addText("선호 느낌 (참고용입니다)",{x:5.7,y:0.75,w:7.19,h:0.42,fontSize:13,fontFace:FB,color:"8A6A4E",align:"center",valign:"middle"});
+    s.addShape(pptx.ShapeType.rect,{x:5.7,y:1.17,w:7.19,h:5.8,fill:{color:"FFFFFF"},line:{color:DK.line,width:0.75}});
+    const cp=(c.photoIndices||[]).map(i=>liked[i]).filter(Boolean).slice(0,6);const n=cp.length;
+    if(!n)ph(s,5.9,1.37,6.79,5.4,"참고 사진");
+    else{const cols=n<=2?n:3,rws=Math.ceil(n/cols),gw=(6.79-(cols-1)*0.12)/cols,gh=(5.4-(rws-1)*0.12)/rws;cp.forEach((p,i)=>img(s,p,5.9+(i%cols)*(gw+0.12),1.37+Math.floor(i/cols)*(gh+0.12),gw,gh));}
+  });
+
+  /* 5. 희망사항 — 선호하는 배경 / 선호하는 포즈 / 활용 예정 소품 */
+  s=newSlide();
+  label(s,"희망사항",0.5,0.35,"반영 가능한 범위 안에서 참고해 주시면 감사하겠습니다");
+  const order=[["bg","선호하는 배경"],["pose","선호하는 포즈"],["props","활용 예정 소품"]];
+  const wl=order.map(([k,l])=>{const w=(r.wishes||[]).find(x=>x.key===k)||{};return{label:l,lines:w.lines?.length?w.lines:["[여기에 적어주세요]"],pics:(w.photoIndices||[]).map(i=>liked[i]).filter(Boolean).slice(0,3)};});
+  const tX=0.5,tY=1.0,cW=[1.55,6.2,4.6],hH=0.42,rH=1.76;
+  s.addTable([[{text:"구분",options:{...cellH,fontFace:F}},{text:"내용",options:{...cellH,fontFace:F}},{text:"참고",options:{...cellH,fontFace:F}}],...wl.map(w=>[{text:w.label,options:{...cell,fontFace:FB}},{text:runs(w.lines,12),options:{align:"left",valign:"middle",margin:[6,10,6,10]}},{text:"",options:{}}])],{x:tX,y:tY,w:cW.reduce((a,b)=>a+b),colW:cW,rowH:[hH,rH,rH,rH],border});
+  wl.forEach((w,ri)=>{const y=tY+hH+ri*rH+0.12,h=rH-0.24,x0=tX+cW[0]+cW[1]+0.12,aw=cW[2]-0.24;const n=w.pics.length;if(!n)return;const gw=Math.min((aw-(n-1)*0.08)/n,h*0.8);w.pics.forEach((p,i)=>img(s,p,x0+i*(gw+0.08),y,gw,h));});
+}
+
 function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(false);const[editVid,setEditVid]=useState(null);const[filter,setFilter]=useState("all");const[f,setF]=useState({name:"",type:"studio",price:"",insta:"",website:"",memo:""});const[ef,setEf]=useState({name:"",type:"studio",price:"",insta:"",website:"",memo:""});const[photoIdx,setPhotoIdx]=useState(0);const vendors=data.sdmVendors||[];const photos=data.sdmPhotos||[];
   /* ── Concept Board ── */
   const[cbOpen,setCbOpen]=useState(false);const[cbRecip,setCbRecip]=useState("studio");const[cbNotes,setCbNotes]=useState("");const[cbStep,setCbStep]=useState("select");const[cbResult,setCbResult]=useState(null);
-  const[cbG,setCbG]=useState({mood:"",bg:"",line:"",detail:"",skin:"",color:"",extra:""});
-  const cbBuildNotes=()=>{const g=cbG;const fmt=v=>(v||"").split("|").filter(Boolean).join(", ");let n="";if(cbRecip==="studio"){if(g.mood)n+="촬영 분위기: "+fmt(g.mood)+"\n";if(g.bg)n+="배경 느낌: "+fmt(g.bg)+"\n";}else if(cbRecip==="dress"){if(g.line)n+="선호 라인: "+fmt(g.line)+"\n";if(g.detail)n+="선호 디테일: "+fmt(g.detail)+"\n";}else{if(g.mood)n+="메이크업 분위기: "+fmt(g.mood)+"\n";if(g.skin)n+="피부/컬러: "+fmt(g.skin)+"\n";}if(g.extra)n+="추가 요청: "+g.extra;return n||"특별한 요청 없음";};
+  const[cbG,setCbG]=useState({...CB_EMPTY});const[cbErr,setCbErr]=useState("");
+  const cbBuildNotes=()=>{const g=cbG;const fmt=v=>(v||"").split("|").filter(Boolean).join(", ");let n="";if(cbRecip==="studio"){const both=k=>[fmt(g[k]),(g[k+"_etc"]||"").trim()].filter(Boolean).join(", ");if(both("bg"))n+="선호하는 배경: "+both("bg")+"\n";if(both("pose"))n+="선호하는 포즈: "+both("pose")+"\n";if(both("props"))n+="활용 예정 소품: "+both("props")+"\n";}else if(cbRecip==="dress"){if(g.line)n+="선호 라인: "+fmt(g.line)+"\n";if(g.detail)n+="선호 디테일: "+fmt(g.detail)+"\n";}else{if(g.mood)n+="메이크업 분위기: "+fmt(g.mood)+"\n";if(g.skin)n+="피부/컬러: "+fmt(g.skin)+"\n";}if(g.extra)n+="추가 요청: "+g.extra;return n||"특별한 요청 없음";};
   const CB_BASE="절대 길게 쓰지 마세요. 번호 리스트, 키워드, 체크리스트 형태만 사용. 문장형 금지.\n\n중요 규칙:\n- 사진에서 분석할 수 있는 내용은 분석하여 작성\n- 파악 안 되는 항목은 가이드라인: [여기에 OOO을 적어주세요] 형태로\n\nJSON 형식으로만 응답. 백틱/마크다운 금지. 문자열 안에 줄바꿈은 반드시 \\n으로.\n{\"title\":\"제목\",\"summary\":\"한줄요약\",\"mood\":\"키워드\",\"sections\":[{\"heading\":\"섹션명\",\"body\":\"내용\"}],\"concepts\":[{\"name\":\"컨셉명\",\"photoIndices\":[0,1],\"details\":\"내용\"}]}";
-  const CB_TYPES={studio:{l:"📷 스튜디오 작가님",sys:CB_BASE+"\n\nsections 구성:\n1. 신부 의상 총 N벌 - 번호리스트\n2. 신랑 의상 총 N벌 - 번호리스트\n3. 신부 헤어 - 키워드 (파악안되면 [여기에 원하는 헤어스타일 적어주세요])\n4. 신랑 헤어 - 키워드\n5. 활용소품 - 번호리스트\n\nconcepts 배열 (중요!):\n- 사진들을 분석해서 로케이션/컨셉별로 그룹핑\n- photoIndices: 해당 컨셉에 맞는 사진 번호(0부터 시작)\n- details: 해당 컨셉의 의상/소품/포즈를 짧은 체크리스트로\n- 예: {\"name\":\"초록들판\",\"photoIndices\":[0,2],\"details\":\"신부: 노란드레스\\n신랑: 블랙\\n소품: 풍선다발\\n포즈: 뛰는샷, 후라이샷\"}\n- 사진이 비슷한 분위기면 같은 컨셉으로 묶기\n- 최소 2개 ~ 최대 5개 컨셉"},
+  const CB_STUDIO_SYS="스튜디오 작가님께 전달할 촬영 컨셉 보드를 작성합니다. 예비 부부가 작가님께 드리는 자료이므로 정중한 ~합니다체로, 한 줄에 한 문장만 짧게 쓰세요.\n\n중요 규칙:\n- 사진에서 읽을 수 있는 내용은 분석해서 작성\n- 예비 신부가 고른 배경·포즈·소품은 반드시 반영\n- 파악 안 되는 내용은 [여기에 OOO을 적어주세요] 형태의 가이드라인으로\n\nJSON 형식으로만 응답. 백틱/마크다운 금지. 문자열 안 줄바꿈은 \\n.\n{\"title\":\"제목\",\"summary\":\"선호하는 분위기를 1~2문장으로 (예: 시크하고 정적인 분위기보다는 차분한 분위기 중심, 캐주얼/로드씬은 귀엽고 밝은 톤을 선호합니다.)\",\"mood\":\"키워드 3개\",\n\"wishes\":[{\"key\":\"bg\",\"label\":\"선호하는 배경\",\"lines\":[\"문장\"],\"photoIndices\":[0]},{\"key\":\"pose\",\"label\":\"선호하는 포즈\",\"lines\":[\"문장\"],\"photoIndices\":[1]},{\"key\":\"props\",\"label\":\"활용 예정 소품\",\"lines\":[\"소품명: 쓰고 싶은 장면\"],\"photoIndices\":[]}],\n\"props\":[\"소품명\"],\n\"concepts\":[{\"name\":\"컨셉명\",\"photoIndices\":[0,2],\"outfit\":\"의상\",\"hair\":\"헤어\",\"props\":\"소품\",\"pose\":\"포즈\"}]}\n\n- wishes: 반드시 bg, pose, props 3개, 각 lines는 2~3개\n- wishes의 photoIndices: 그 항목을 잘 보여주는 참고 사진 최대 3장\n- props: 소품 이름만 최대 5개\n- concepts: 사진을 로케이션/분위기별로 묶어 2~5개. 모르는 칸은 빈 문자열";
+const CB_TYPES={studio:{l:"📷 스튜디오 작가님",sys:CB_STUDIO_SYS},
     dress:{l:"👗 드레스샵 실장님",sys:CB_BASE+"\n\nsections:\n1. 선호 드레스 스타일 - 라인, 넥라인, 소매\n2. 소재 & 디테일\n3. 원하는 분위기 - 키워드\n4. 피하고 싶은 스타일 (파악안되면 가이드라인)\n5. 참고사항\n\nconcepts: 사진별로 드레스 스타일을 그룹핑\n- name: 드레스 스타일명 (예: 클래식 A라인, 슬립드레스)\n- photoIndices: 해당 스타일 사진번호\n- details: 해당 드레스의 특징 키워드"},
     makeup:{l:"💄 메이크업 아티스트님",sys:CB_BASE+"\n\nsections:\n1. 전체 무드 - 키워드\n2. 베이스 메이크업\n3. 아이 메이크업\n4. 립 & 치크\n5. 헤어 스타일\n6. 피하고 싶은 것 (파악안되면 가이드라인)\n\nconcepts: 사진별 메이크업 스타일 그룹핑\n- name: 메이크업 무드명\n- photoIndices: 해당 사진번호\n- details: 해당 메이크업 특징"}};
   const compressForAI=async(src)=>{return new Promise(r=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas");const max=300;let w=img.width,h=img.height;if(w>max){h=h*(max/w);w=max;}if(h>max){w=w*(max/h);h=max;}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);const d=c.toDataURL("image/jpeg",0.5);r(d.split(",")[1]);};img.onerror=()=>r(null);img.src=src;});};
   const cbLikedByType=(type)=>{return photos.filter(p=>{if(!p.liked)return false;const v=vendors.find(v=>v.id===p.vid);return v&&v.type===type;});};
-  const cbAnalyze=async()=>{const liked=cbLikedByType(cbRecip);if(liked.length===0){showT("해당 카테고리에 좋아요한 사진이 없어요");return;}setCbStep("loading");try{const smallImgs=[];for(const p of liked.slice(0,12)){const b64=await compressForAI(p.src);if(b64)smallImgs.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}});}if(smallImgs.length===0){setCbStep("error");return;}const notes=cbBuildNotes();const userMsg=[...smallImgs,{type:"text",text:"예비 신부의 요청사항:\n"+notes+"\n\n위 레퍼런스 사진 "+smallImgs.length+"장을 분석하여 컨셉 보드를 JSON으로 작성해주세요. 한국어로 작성하세요. photoIndices는 0~"+(smallImgs.length-1)+" 범위로."}];const body=JSON.stringify({system:CB_TYPES[cbRecip].sys,messages:[{role:"user",content:userMsg}]});
-    /* Try serverless function first (Vercel), fallback to direct API (Claude preview) */
-    let res;try{res=await fetch("/api/concept-board",{method:"POST",headers:{"Content-Type":"application/json"},body});if(!res.ok)throw new Error("serverless "+res.status);}catch(e1){console.log("Serverless failed, trying direct API...",e1.message);res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,system:CB_TYPES[cbRecip].sys,messages:[{role:"user",content:userMsg}]})});}
-    if(!res.ok){const errText=await res.text();console.error("API error:",res.status,errText);setCbStep("error");return;}const d=await res.json();console.log("API response:",d);const txt=d.content?.map(c=>c.text||"").join("")||"";let clean=txt.replace(/```json|```/g,"").trim();
+  const cbFail=msg=>{setCbErr(msg||"");setCbStep("error");};
+  const cbAnalyze=async()=>{const liked=cbLikedByType(cbRecip);if(liked.length===0){showT("해당 카테고리에 좋아요한 사진이 없어요");return;}setCbStep("loading");setCbErr("");try{const smallImgs=[];const usedIds=[];for(const p of liked.slice(0,12)){const b64=await compressForAI(p.src);if(b64){smallImgs.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}});usedIds.push(p.id);}}if(smallImgs.length===0){cbFail("사진을 불러오지 못했어요");return;}const notes=cbBuildNotes();const userMsg=[...smallImgs,{type:"text",text:"예비 신부의 요청사항:\n"+notes+"\n\n위 레퍼런스 사진 "+smallImgs.length+"장을 분석하여 컨셉 보드를 JSON으로 작성해주세요. 한국어로 작성하세요. photoIndices는 0~"+(smallImgs.length-1)+" 범위로."}];const body=JSON.stringify({system:CB_TYPES[cbRecip].sys,messages:[{role:"user",content:userMsg}]});
+    /* 서버(Vercel) 함수로만 호출 — API 키는 서버에만 있어요. 실패하면 실제 원인을 화면에 보여줘요 */
+    let res;try{res=await fetch("/api/concept-board",{method:"POST",headers:{"Content-Type":"application/json"},body});}catch(e1){cbFail("서버에 연결하지 못했어요 ("+e1.message+")");return;}
+    if(!res.ok){const errText=await res.text();let msg=errText;try{msg=JSON.parse(errText).error||errText;}catch{}console.error("API error:",res.status,errText);cbFail(res.status===413?"사진 용량이 너무 커요. Pick한 사진 수를 줄여주세요":String(msg).slice(0,300));return;}const d=await res.json();console.log("API response:",d);const txt=d.content?.map(c=>c.text||"").join("")||"";let clean=txt.replace(/```json|```/g,"").trim();
     /* Robust JSON parsing: fix common issues */
-    try{var parsed=JSON.parse(clean);}catch(e1){console.warn("JSON fix attempt...",e1.message);clean=clean.replace(/[\x00-\x1F]/g," ").replace(/,\s*}/g,"}").replace(/,\s*]/g,"]");try{parsed=JSON.parse(clean);}catch(e2){console.error("JSON parse failed:",e2,clean.slice(0,500));setCbStep("error");return;}}
-    setCbResult(parsed);setCbStep("result");}catch(e){console.error("cbAnalyze error:",e);setCbStep("error");}};
-  const cbDownloadPPT=async()=>{if(!cbResult||typeof PptxGenJS==="undefined")return;const pptx=new PptxGenJS();pptx.defineLayout({name:"WIDE",width:13.33,height:7.5});pptx.layout="WIDE";const liked=cbLikedByType(cbRecip);
-    const C={bg:"F8FAF5",card:"FFFFFF",accent:"5B7EAE",accent2:"7BA23A",accent3:"B0A0CC",warm:"C62860",text:"3A3A50",sub:"8A8A9E",guideline:"6EC8E4"};
+    try{var parsed=JSON.parse(clean);}catch(e1){console.warn("JSON fix attempt...",e1.message);clean=clean.replace(/[\x00-\x1F]/g," ").replace(/,\s*}/g,"}").replace(/,\s*]/g,"]");try{parsed=JSON.parse(clean);}catch(e2){console.error("JSON parse failed:",e2,clean.slice(0,500));cbFail(d.stop_reason==="max_tokens"?"AI 답변이 너무 길어 중간에 끊겼어요. 사진 수를 줄여 다시 시도해주세요":"AI 답변 형식을 읽지 못했어요. 다시 시도해주세요");return;}}
+    parsed._photoIds=usedIds;if(cbRecip==="studio")parsed=cbStudioView(parsed);
+    setCbResult(parsed);setCbStep("result");}catch(e){console.error("cbAnalyze error:",e);cbFail(e?.message);}};
+  /* 스튜디오 결과 → 앱 화면용 sections/details 로 변환 (PPT는 원본 구조 사용) */
+  const cbStudioView=r=>{const W=(r.wishes||[]);const sections=W.map(w=>({heading:w.label||({bg:"선호하는 배경",pose:"선호하는 포즈",props:"활용 예정 소품"})[w.key]||"",body:(w.lines||[]).map(x=>"- "+x).join("\n")}));const concepts=(r.concepts||[]).map(c=>({...c,details:[["의상",c.outfit],["헤어",c.hair],["소품",c.props],["포즈",c.pose]].filter(x=>x[1]).map(x=>x[0]+": "+x[1]).join("\n")}));return{...r,sections,concepts};};
+  /* 분석에 실제로 쓰인 사진 순서 그대로 (photoIndices가 어긋나지 않게) */
+  const cbUsedPhotos=()=>{const liked=cbLikedByType(cbRecip);const ids=cbResult?._photoIds;if(!ids)return liked;return ids.map(id=>liked.find(p=>p.id===id)).filter(Boolean);};
+  const cbDownloadPPT=async()=>{if(!cbResult||typeof PptxGenJS==="undefined"){showT("PPT 도구를 불러오는 중이에요. 잠시 후 다시 눌러주세요");return;}const pptx=new PptxGenJS();pptx.defineLayout({name:"WIDE",width:13.33,height:7.5});pptx.layout="WIDE";const liked=cbUsedPhotos();
+    if(cbRecip==="studio"){buildStudioDeck(pptx,cbResult,liked,{data,vendors,photos});const fn=((cbResult.title||"스튜디오_컨셉보드")).replace(/\s+/g,"_");pptx.writeFile({fileName:fn+".pptx"}).then(()=>showT("PPT 다운로드 완료!"));return;}
+    const C={bg:"FDFBF8",card:"FFFFFF",accent:"6B4F3A",accent2:"8A6A4E",accent3:"A08A70",warm:"B07A5A",text:"2E2925",sub:"9A8F84",guideline:"A08A70"};
     const addBar=(sl,c)=>{sl.addShape(pptx.ShapeType.rect,{x:0,y:0,w:"100%",h:0.06,fill:{color:c||C.accent}});};
     const fmtTxt=(body,x,y,w,h,sl)=>{const lines=(body||"").split("\n");const runs=[];lines.forEach((ln,i)=>{if(i>0)runs.push({text:"\n",options:{fontSize:12}});const isGuide=ln.includes("[")||ln.includes("「");runs.push({text:ln,options:{fontSize:isGuide?11:12,fontFace:"Pretendard",color:isGuide?C.guideline:C.text,italic:isGuide}});});sl.addText(runs,{x,y,w,h,lineSpacingMultiple:1.55,valign:"top"});};
 
@@ -471,17 +602,17 @@ function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(fal
     <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}><button style={{...S.btn,padding:"10px 18px",fontSize:13}} onClick={()=>{setF({name:"",type:"studio",price:"",insta:"",website:"",memo:""});setShow(true);}}>+ 업체 등록</button>{likedCount>0&&<button style={{padding:"10px 18px",background:P.lavLt,color:P.lavDk,border:"none",borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={()=>{navigator.clipboard.writeText(shareUrl).then(()=>showT("공유 링크 복사됨!")).catch(()=>{});}}>🔗 My Pick 공유</button>}{likedCount>0&&<button style={{padding:"10px 18px",background:"linear-gradient(135deg,#FCE4EC,#E4DFF0)",color:P.lavDk,border:"none",borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:FONT}} onClick={()=>setCbOpen(true)}>✨ 컨셉 보드</button>}</div>
     {/* ── Concept Board Modal ── */}
     <Modal title={cbStep==="result"?(cbResult?.title||"컨셉 보드"):"✨ 컨셉 보드 만들기"} open={cbOpen} onClose={cbClose}>
-      {cbStep==="select"&&<><div style={{marginBottom:18}}><label style={S.lbl}>누구에게 보낼 컨셉 보드인가요?</label><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{Object.entries(CB_TYPES).map(([k,v])=><button type="button" key={k} onClick={()=>{setCbRecip(k);setCbG({mood:"",bg:"",line:"",detail:"",skin:"",color:"",extra:""});}} style={{padding:"10px 16px",borderRadius:12,border:"none",fontSize:14,fontWeight:cbRecip===k?700:500,background:cbRecip===k?P.periDk:P.periLt,color:cbRecip===k?"#fff":P.periDk,cursor:"pointer",fontFamily:FONT}}>{v.l}</button>)}</div></div>
+      {cbStep==="select"&&<><div style={{marginBottom:18}}><label style={S.lbl}>누구에게 보낼 컨셉 보드인가요?</label><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{Object.entries(CB_TYPES).map(([k,v])=><button type="button" key={k} onClick={()=>{setCbRecip(k);setCbG({...CB_EMPTY});}} style={{padding:"10px 16px",borderRadius:12,border:"none",fontSize:14,fontWeight:cbRecip===k?700:500,background:cbRecip===k?P.periDk:P.periLt,color:cbRecip===k?"#fff":P.periDk,cursor:"pointer",fontFamily:FONT}}>{v.l}</button>)}</div></div>
         <CbGuide recip={cbRecip} cbG={cbG} setCbG={setCbG} P={P} S={S} MI={MI} FONT={FONT}/>
         {(()=>{const cbPhotos=cbLikedByType(cbRecip);return<div style={{marginBottom:18,padding:"14px 16px",background:cbPhotos.length>0?P.greenBg:"#FFF3E0",borderRadius:12}}><div style={{fontSize:13,fontWeight:600,color:cbPhotos.length>0?P.greenDk:"#E65100",marginBottom:6}}>{cbPhotos.length>0?"AI 분석에 포함될 My Pick "+cbPhotos.length+"장":"⚠️ 해당 카테고리에 Pick한 사진이 없어요"}</div>{cbPhotos.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto"}}>{cbPhotos.slice(0,12).map(p=><div key={p.id} style={{width:48,height:48,borderRadius:8,overflow:"hidden",flexShrink:0}}><img src={p.src} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/></div>)}</div>}{cbPhotos.length>12&&<div style={{fontSize:11,color:P.textMuted,marginTop:4}}>최대 12장까지 AI 분석에 포함돼요</div>}{cbPhotos.length===0&&<div style={{fontSize:12,color:P.textSub,marginTop:4}}>My Pick 탭에서 해당 카테고리 업체의 사진에 ❤️를 눌러주세요</div>}</div>;})()}
         <button style={{...S.btn,width:"100%"}} onClick={cbAnalyze}>🤖 AI 분석 시작</button></>}
       {cbStep==="loading"&&<div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:36,marginBottom:12}}>🤖</div><div style={{fontSize:16,fontWeight:600,color:P.periDk,marginBottom:8}}>사진을 분석하고 있어요...</div><div style={{fontSize:14,color:P.textSub}}>30초~1분 정도 걸릴 수 있어요</div></div>}
-      {cbStep==="error"&&<div style={{textAlign:"center",padding:"30px 20px"}}><div style={{fontSize:15,color:"#D32F2F",marginBottom:12}}>분석 중 오류가 발생했어요.</div><div style={{fontSize:13,color:P.textSub,marginBottom:16}}>사진 크기가 크거나 네트워크 문제일 수 있어요.<br/>좋아요 사진 수를 줄이고 다시 시도해보세요.</div><button style={{...S.btn}} onClick={()=>setCbStep("select")}>다시 시도</button></div>}
+      {cbStep==="error"&&<div style={{textAlign:"center",padding:"30px 20px"}}><div style={{fontSize:15,color:"#D32F2F",marginBottom:12}}>분석 중 오류가 발생했어요.</div>{cbErr?<div style={{fontSize:12,color:P.text,marginBottom:16,padding:"10px 12px",background:"#FFF3F0",borderRadius:10,textAlign:"left",wordBreak:"break-all",lineHeight:1.6}}>원인: {cbErr}</div>:<div style={{fontSize:13,color:P.textSub,marginBottom:16}}>잠시 후 다시 시도해보세요.</div>}<button style={{...S.btn}} onClick={()=>setCbStep("select")}>다시 시도</button></div>}
       {cbStep==="result"&&cbResult&&<><div style={{marginBottom:18,padding:"14px 16px",background:`linear-gradient(135deg,${P.blueBg},${P.lavBg})`,borderRadius:14}}><div style={{fontSize:14,fontWeight:600,color:P.periDk,marginBottom:6}}>{cbResult.summary}</div><div style={{fontSize:13,color:P.blueDk,fontStyle:"italic"}}>Mood: {cbResult.mood}</div></div>
         {(cbResult.sections||[]).map((sec,i)=><div key={i} style={{marginBottom:14,padding:"14px 16px",background:P.greenBg,borderRadius:12}}><div style={{fontSize:14,fontWeight:700,color:P.periDk,marginBottom:6}}>{sec.heading}</div><div style={{fontSize:14,color:P.text,lineHeight:1.7}}>{(sec.body||"").split("\n").map((line,j)=><div key={j} style={line.includes("[")||line.includes("「")?{color:P.blueDk,fontStyle:"italic",background:P.blueLt,padding:"4px 8px",borderRadius:6,marginTop:4,fontSize:13}:{}}><MdText text={line}/></div>)}</div></div>)}
         {/* Concepts with photos */}
         {(cbResult.concepts||[]).length>0&&<div style={{fontSize:14,fontWeight:700,color:P.periDk,marginBottom:10,marginTop:6}}>📸 촬영 컨셉별 정리</div>}
-        {(cbResult.concepts||[]).map((con,ci)=>{const cLiked=cbLikedByType(cbRecip);const cPhotos=(con.photoIndices||[]).map(idx=>cLiked[idx]).filter(Boolean);return<div key={ci} style={{marginBottom:16,padding:"14px 16px",background:"#fff",borderRadius:14,border:"2px solid "+P.periLt}}>
+        {(cbResult.concepts||[]).map((con,ci)=>{const cLiked=cbUsedPhotos();const cPhotos=(con.photoIndices||[]).map(idx=>cLiked[idx]).filter(Boolean);return<div key={ci} style={{marginBottom:16,padding:"14px 16px",background:"#fff",borderRadius:14,border:"2px solid "+P.periLt}}>
           <div style={{fontSize:15,fontWeight:700,color:P.periDk,marginBottom:8}}>컨셉 {ci+1}. {con.name}</div>
           {cPhotos.length>0&&<div style={{display:"flex",gap:6,overflowX:"auto",marginBottom:10}}>{cPhotos.map((p,i)=><div key={i} style={{width:80,height:80,borderRadius:10,overflow:"hidden",flexShrink:0}}><img src={p.src} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/></div>)}</div>}
           <div style={{fontSize:13,color:P.text,lineHeight:1.7}}>{(con.details||"").split("\n").map((line,j)=><div key={j} style={line.includes("[")||line.includes("「")?{color:P.blueDk,fontStyle:"italic",fontSize:12}:{}}><MdText text={line}/></div>)}</div>
@@ -609,8 +740,8 @@ function ChatBot({tab,data}){
 
   const send=async(text)=>{if(!text.trim()||loading)return;const userMsg={role:"user",content:text};const newMsgs=[...msgs,userMsg];setMsgs(newMsgs);setInput("");setLoading(true);
     try{const body=JSON.stringify({system:buildSystem(),messages:newMsgs.map(m=>({role:m.role,content:m.content}))});
-      let res;try{res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body});if(!res.ok)throw new Error("serverless");}catch{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01"},body});}
-      if(res.ok){const d=await res.json();const reply=d.content?.map(c=>c.text||"").join("")||"답변을 생성하지 못했어요.";setMsgs([...newMsgs,{role:"assistant",content:reply}]);}else{setMsgs([...newMsgs,{role:"assistant",content:"일시적인 오류가 발생했어요. 다시 질문해주세요!"}]);}
+      const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body});
+      if(res.ok){const d=await res.json();const reply=d.content?.map(c=>c.text||"").join("")||"답변을 생성하지 못했어요.";setMsgs([...newMsgs,{role:"assistant",content:reply}]);}else{let why="";try{why=(await res.json()).error||"";}catch{}console.error("Chat API error:",res.status,why);setMsgs([...newMsgs,{role:"assistant",content:"오류가 발생했어요. 잠시 후 다시 질문해주세요."+(why?"\n(원인: "+why+")":"")}]);}
     }catch(e){console.error("Chat error:",e);setMsgs([...newMsgs,{role:"assistant",content:"네트워크 오류가 발생했어요. 다시 시도해주세요."}]);}setLoading(false);};
 
   useEffect(()=>{if(scrollRef.current)scrollRef.current.scrollTop=scrollRef.current.scrollHeight;},[msgs,loading]);
@@ -651,7 +782,7 @@ const TABS=[{id:"dashboard",l:"홈",i:"🏡"},{id:"checklist",l:"체크리스트
 
 export default function App(){const[ck,setCk]=useState(null);const[data,setDR]=useState(null);const[tab,setTab]=useState("dashboard");const[loading,setLoading]=useState(true);const[toast,setToast]=useState({msg:"",show:false});const[shareMode,setShareMode]=useState(false);const timerRef=useRef(null);const showT=msg=>{setToast({msg,show:true});setTimeout(()=>setToast({msg:"",show:false}),2000);};
   /* Dynamic theme */
-  P=THEMES[data?.theme||"garden"]||THEMES.garden;S=makeS();
+  P=THEMES[data?.theme||"garden"]||THEMES.garden;MS=data?.milestones||{};PLAN_START=data?.planStart||null;S=makeS();
   useEffect(()=>{const params=new URLSearchParams(window.location.search);const shareKey=params.get("share");if(shareKey){setShareMode(true);dbLoad(shareKey).then(d=>{if(d)setDR(migrateData(d));setLoading(false);});return;}const k=localStorage.getItem("wp_ck");if(k){dbLoad(k).then(d=>{if(d){setCk(k);setDR(migrateData(d));}setLoading(false);});}else setLoading(false);},[]);
   const onLogin=(key,d)=>{setCk(key);setDR(migrateData(d));localStorage.setItem("wp_ck",key);};const onLogout=()=>{localStorage.removeItem("wp_ck");setCk(null);setDR(null);setTab("dashboard");};const onRefresh=async()=>{if(!ck)return;setLoading(true);const d=await dbLoad(ck);if(d){setDR(migrateData(d));showT("최신 데이터 불러옴");}setLoading(false);};
   /* Merge arrays by ID, respecting deletions */
