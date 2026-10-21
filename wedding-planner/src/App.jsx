@@ -38,7 +38,7 @@ const CL_TEMPLATE=[
     {id:"d02",text:"드레스샵 결정·계약",cat:"dress"},
     {id:"d03",text:"예복(턱시도) 샵 알아보기",cat:"shopping"},
     {id:"d04",text:"예복 디자인 선택·맞춤 시작",cat:"shopping"},
-    {id:"d06",text:"한복 알아보기 (맞춤/대여)",cat:"shopping"},
+    {id:"d06",text:"혼주 한복 알아보기 (맞춤/대여)",cat:"family"},
     {id:"d05",text:"예물 반지 디자인 확정·제작 의뢰",cat:"shopping"},
     {id:"d08",text:"혼주 메이크업 예약",cat:"makeup"},
     {id:"d07",text:"혼수 품목 리스트 작성",cat:"shopping"}
@@ -47,14 +47,12 @@ const CL_TEMPLATE=[
     {id:"p07",text:"웨딩 관리 시작 (피부·등·팔라인)",cat:"etc"},
     {id:"p01",text:"촬영가봉 (드레스 셀렉·사이즈 피팅)",cat:"dress"},
     {id:"p02",text:"예복 1차 가봉",cat:"shopping"},
-    {id:"p06",text:"한복 셀렉 / 1차 가봉",cat:"shopping"},
     {id:"p05",text:"예물 반지 수령",cat:"shopping"},
     {id:"p03",text:"촬영 컨셉·레퍼런스 사진 준비",cat:"photo"},
     {id:"p04",text:"촬영 소품 준비 (커플룩, 소품 등)",cat:"photo"}
   ]},
   {mbStart:6,mbEnd:4,label:"스튜디오 촬영",emoji:"💛",items:[
     {id:"ph02",text:"예복 2차 가봉·수령",cat:"shopping"},
-    {id:"ph04",text:"한복 2차 가봉·수령",cat:"shopping"},
     {id:"ph01",text:"촬영 전 준비물 체크 (속옷, 간식, 커플룩 등)",cat:"photo"},
     {id:"ph03",text:"스튜디오 웨딩 촬영",cat:"photo"}
   ]},
@@ -76,6 +74,7 @@ const CL_TEMPLATE=[
     {id:"f05",text:"축가 부탁",cat:"ceremony"},
     {id:"f06",text:"접수대 담당 섭외",cat:"ceremony"},
     {id:"f10",text:"혼주 의상 준비 (한복/정장)",cat:"family"},
+    {id:"p06",text:"혼주 한복 셀렉 / 1차 가봉",cat:"family"},
     {id:"f07",text:"폐백 여부 결정",cat:"ceremony"},
     {id:"f09",text:"답례품 준비",cat:"ceremony"},
     {id:"f03",text:"혼수 입주",cat:"shopping"}
@@ -84,6 +83,7 @@ const CL_TEMPLATE=[
     {id:"b01",text:"본식 드레스 가봉·셀렉",cat:"dress"},
     {id:"b02",text:"2부 의상 준비",cat:"dress"},
     {id:"b05",text:"혼주 확인 / 예단 전달",cat:"family"},
+    {id:"ph04",text:"혼주 한복 2차 가봉·수령",cat:"family"},
     {id:"b03",text:"종이 청첩장 제작·발송",cat:"etc"},
     {id:"b06",text:"식순표 작성·사회자 공유",cat:"ceremony"},
     {id:"b07",text:"식전영상·MR 음원 준비 (USB)",cat:"ceremony"},
@@ -198,7 +198,7 @@ const PHOTO_GUIDE=[
    셀렉 기한은 ①촬영 후 2개월 ②청첩장 일정에서 거꾸로 계산한 날 중 더 빠른 날 */
 const SCHED={selectWithin:60,retouchDays:90,mobileMake:56,mobileSend:42};
 let MS={};/* 현재 커플의 milestones — 테마(P)처럼 App 렌더 때 갱신 */
-const MS_DEPS={p01:{ms:"fittingDate",days:0},p02:{ms:"fittingDate",days:0},p03:{ms:"photoDate",days:14},p04:{ms:"photoDate",days:7},p05:{ms:"fittingDate",days:0},p06:{ms:"fittingDate",days:0},p07:{ms:"photoDate",days:60},ph01:{ms:"photoDate",days:1},ph02:{ms:"photoDate",days:7},ph03:{ms:"photoDate",days:0},ph04:{ms:"photoDate",days:7},
+const MS_DEPS={p01:{ms:"fittingDate",days:0},p02:{ms:"fittingDate",days:0},p03:{ms:"photoDate",days:14},p04:{ms:"photoDate",days:7},p05:{ms:"fittingDate",days:0},p07:{ms:"photoDate",days:60},ph01:{ms:"photoDate",days:1},ph02:{ms:"photoDate",days:7},ph03:{ms:"photoDate",days:0},
   sl01:{ms:"select"},sl02:{ms:"select"},b04:{ms:"retouch"},
   sl03:{ms:"weddingAuto",days:SCHED.mobileMake},sl04:{ms:"weddingAuto",days:SCHED.mobileSend},
   b01:{ms:"weddingAuto",days:42},b02:{ms:"weddingAuto",days:42}};
@@ -413,7 +413,7 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
 function CLTab({data,setData}){const wd=data.weddingDate;const[memoId,setMemoId]=useState(null);const[memoTxt,setMemoTxt]=useState("");const[addPi,setAddPi]=useState(null);const[addF,setAddF]=useState({text:"",cat:"etc",customCatName:"",note:""});const[editMode,setEditMode]=useState(false);const toggle=(pi,id)=>{setData({...data,checklist:data.checklist.map((p,i)=>i!==pi?p:{...p,items:p.items.map(it=>it.id===id?{...it,done:!it.done}:it)})});};const saveMemo=()=>{if(!memoId)return;setData({...data,checklist:data.checklist.map((p,i)=>i!==memoId.pi?p:{...p,items:p.items.map(it=>it.id===memoId.id?{...it,memo:memoTxt}:it)})});setMemoId(null);};const addItem=()=>{if(!addF.text||addPi===null)return;const isCust=addF.cat==="__custom__";setData({...data,checklist:data.checklist.map((p,i)=>i!==addPi?p:{...p,items:[...p.items,{id:"c"+Date.now(),text:addF.text,cat:isCust?"__custom__":addF.cat,customCatName:isCust?addF.customCatName:"",note:addF.note,done:false,memo:"",custom:true}]})});setAddPi(null);setAddF({text:"",cat:"etc",customCatName:"",note:""});};const rmItem=(pi,id)=>{if(!confirm("이 항목을 삭제하시겠습니까?"))return;setData({...data,checklist:data.checklist.map((p,i)=>i!==pi?p:{...p,items:p.items.filter(it=>it.id!==id)}),_deletedIds:[...(data._deletedIds||[]),id]});};const dlCL=()=>{const rows=[];data.checklist.forEach(ph=>{ph.items.forEach(i=>{rows.push([ph.label,phaseLabel(ph,wd),phaseDeadline(ph,wd),CAT[i.cat]?CAT[i.cat].n:(i.customCatName||"기타"),i.text,i.done?"완료":"미완료",i.memo||""]);});});dlCSV("체크리스트",["단계","시기","기한","카테고리","항목","상태","메모"],rows);};
   return<div style={S.tab}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,flexWrap:"wrap",gap:8}}><h2 style={{...S.th,margin:0}}>🌿 체크리스트</h2><DlB onClick={dlCL}/></div><p className="tab-guide" style={{fontSize:13,color:P.textSub,margin:"0 0 16px",lineHeight:1.6}}>결혼일 기준으로 자동 계산된 준비 일정이에요. 하나씩 체크하며 우리의 진행 상황을 확인해보세요!</p>
     <Modal title="메모" open={memoId!==null} onClose={()=>setMemoId(null)}><div style={{marginBottom:18}}><textarea style={{...MI,minHeight:110,resize:"vertical"}} placeholder="업체 연락처, 가격, 주의사항 등" value={memoTxt} onChange={e=>setMemoTxt(e.target.value)}/></div><button style={{...S.btn,width:"100%"}} onClick={saveMemo}>저장</button>
-      {memoId&&(()=>{const item=data.checklist[memoId.pi]?.items.find(i=>i.id===memoId.id);if(!item)return null;const catMap={venue:["웨딩홀"],planner:["웨딩홀"],dress:["드레스","촬영가봉","본식 가봉"],photo:["촬영 준비","촬영 당일","앨범 셀렉","촬영 파일","촬영 비용"],shopping:["예물","예복","한복","혼수"],makeup:["메이크업"],honeymoon:[],ceremony:["식순·음향","포토테이블","비상키트","축의금","하객·섭외","답례품","폐백"],flower:["부케"],family:["상견례"],etc:["웨딩관리","혼인신고","청첩장","신혼집"]};
+      {memoId&&(()=>{const item=data.checklist[memoId.pi]?.items.find(i=>i.id===memoId.id);if(!item)return null;const catMap={venue:["웨딩홀"],planner:["웨딩홀"],dress:["드레스","촬영가봉","본식 가봉"],photo:["촬영 준비","촬영 당일","앨범 셀렉","촬영 파일","촬영 비용"],shopping:["예물","예복","한복","혼수"],makeup:["메이크업"],honeymoon:[],ceremony:["식순·음향","포토테이블","비상키트","축의금","하객·섭외","답례품","폐백"],flower:["부케"],family:["상견례","한복"],etc:["웨딩관리","혼인신고","청첩장","신혼집"]};
         const tipCats=catMap[item.cat]||[];if(tipCats.length===0)return null;
         const phaseTips=TIPS_BY_PHASE[memoId.pi]||[];const related=phaseTips.filter(t=>tipCats.includes(t.cat));
         if(related.length===0)return null;
@@ -502,17 +502,36 @@ function buildStudioDeck(pptx,r,liked,{data,vendors,photos}){
   ph(s,6.83,1.3,3.08,2.31,"평소 사진");ph(s,6.83,3.71,3.08,2.31,"평소 사진");ph(s,10.15,1.3,2.56,4.72,"평소 사진");
   s.addText("평소 사진 찍는 모습",{x:6.83,y:6.12,w:5.88,h:0.37,fontSize:12,fontFace:F,color:DK.text,align:"center"});
 
-  /* 4. 컨셉별 (의상 장표 레이아웃: 왼쪽 정리표 + 오른쪽 선호 느낌 사진) */
+  /* 4. 컨셉별 — 원안 '의상' 장표 구조
+     왼쪽: 신부(드레스·헤어) / 신랑(수트·구두) 정리 + 사진 넣는 칸
+     오른쪽: 선호 느낌(참고용) → 선호 배경 / 선호 포즈 / 활용 예정 소품 3칸 */
   const circ="①②③④⑤⑥⑦⑧";
-  (r.concepts||[]).forEach((c,ci)=>{s=newSlide();label(s,"컨셉 "+circ[ci],0.44,0.12,c.name||"");
-    const rows=[["의상",c.outfit],["헤어",c.hair],["소품",c.props],["포즈",c.pose]];
-    s.addTable([[{text:"구분",options:{...cellH,fontFace:F}},{text:"내용",options:{...cellH,fontFace:F}}],...rows.map(([k,v])=>[{text:k,options:{...cell,fontFace:FB,fill:{color:DK.cell}}},{text:v||"[여기에 적어주세요]",options:{...cell,align:"left",margin:[4,10,4,10],color:v?DK.text:DK.guide,italic:!v}}])],{x:0.44,y:0.75,w:5.0,colW:[1.1,3.9],rowH:[0.42,1.45,1.45,1.45,1.45],border});
-    s.addShape(pptx.ShapeType.rect,{x:5.7,y:0.75,w:7.19,h:0.42,fill:{color:DK.head},line:{color:DK.line,width:0.75}});
-    s.addText("선호 느낌 (참고용입니다)",{x:5.7,y:0.75,w:7.19,h:0.42,fontSize:13,fontFace:FB,color:"8A6A4E",align:"center",valign:"middle"});
-    s.addShape(pptx.ShapeType.rect,{x:5.7,y:1.17,w:7.19,h:5.8,fill:{color:"FFFFFF"},line:{color:DK.line,width:0.75}});
-    const cp=(c.photoIndices||[]).map(i=>liked[i]).filter(Boolean).slice(0,6);const n=cp.length;
-    if(!n)ph(s,5.9,1.37,6.79,5.4,"참고 사진");
-    else{const cols=n<=2?n:3,rws=Math.ceil(n/cols),gw=(6.79-(cols-1)*0.12)/cols,gh=(5.4-(rws-1)*0.12)/rws;cp.forEach((p,i)=>img(s,p,5.9+(i%cols)*(gw+0.12),1.37+Math.floor(i/cols)*(gh+0.12),gw,gh));}
+  (r.concepts||[]).forEach((c,ci)=>{s=newSlide();label(s,"컨셉 "+circ[ci],0.44,0.12,c.name?c.name+" · 오른쪽 사진은 참고용입니다":"오른쪽 사진은 참고용입니다");
+    const X=0.44,Y=0.75,lc=[1.25,1.2,1.75],rh=[0.42,0.46,2.2,0.42,0.42,2.2];
+    const lab={fill:{color:DK.brown},color:"FFFFFF",fontFace:F,fontSize:12,align:"center",valign:"middle"};
+    const val=v=>({text:v||"[적어주세요]",options:{...cell,fontSize:12,fontFace:v?FB:F,color:v?DK.text:DK.guide,italic:!v,fill:{color:"FFFFFF"}}});
+    const who=t=>({text:t,options:{...cell,fontFace:FB,fontSize:15,fill:{color:DK.cell},rowspan:3}});
+    const photoRow={text:"",options:{colspan:2,fill:{color:DK.cell}}};
+    s.addTable([
+      [who("신부"),{text:"드레스",options:lab},val(c.dress)],
+      [{text:"헤어",options:lab},val(c.hair)],
+      [photoRow],
+      [who("신랑"),{text:"수트",options:lab},val(c.suit)],
+      [{text:"구두",options:lab},val(c.shoes)],
+      [photoRow]
+    ],{x:X,y:Y,w:lc.reduce((a,b)=>a+b),colW:lc,rowH:rh,border:{type:"solid",pt:0.75,color:DK.line}});
+    const px=X+lc[0]+0.12,pw2=lc[1]+lc[2]-0.24,y1=Y+rh[0]+rh[1]+0.12,y2=Y+rh[0]+rh[1]+rh[2]+rh[3]+rh[4]+0.12,hh=rh[2]-0.24,half=(pw2-0.1)/2;
+    ph(s,px,y1,half,hh,"헤어 사진");ph(s,px+half+0.1,y1,half,hh,"드레스 사진");
+    ph(s,px,y2,half,hh,"수트 사진");ph(s,px+half+0.1,y2,half,hh,"구두·소품 사진");
+    /* 오른쪽 3칸 */
+    const RX=X+lc.reduce((a,b)=>a+b)+0.15,RW=12.89-RX,cw=RW/3,hH2=0.5,cH=rh.reduce((a,b)=>a+b)-hH2;
+    const cats=[["bg","선호 배경"],["pose","선호 포즈"],["props","활용 예정 소품"]];
+    const head={fill:{color:DK.head},fontFace:FB,fontSize:13,color:"8A6A4E",align:"center",valign:"middle"};
+    s.addTable([cats.map(([,l])=>({text:l,options:head})),cats.map(([k])=>{const o=c[k]||{};const ls=(o.lines&&o.lines.length)?o.lines:["[여기에 적어주세요]"];return{text:runs(ls,11),options:{valign:"bottom",align:"left",margin:[4,8,8,8],fill:{color:"FFFFFF"}}};})],{x:RX,y:Y,w:RW,colW:[cw,cw,cw],rowH:[hH2,cH],border:{type:"solid",pt:0.75,color:DK.line}});
+    const TXT=1.05,top=Y+hH2+0.12,ah=cH-0.24-TXT,aw2=cw-0.2;
+    cats.forEach(([k,l],ki)=>{const x0=RX+ki*cw+0.1;const pics=((c[k]||{}).photoIndices||[]).map(i=>liked[i]).filter(Boolean).slice(0,2);
+      if(!pics.length){ph(s,x0,top,aw2,ah,k==="props"?"소품 사진":"참고 사진");return;}
+      const gh=(ah-(pics.length-1)*0.1)/pics.length;pics.forEach((p,i)=>img(s,p,x0,top+i*(gh+0.1),aw2,gh));});
   });
 
   /* 5. 희망사항 — 선호하는 배경 / 선호하는 포즈 / 활용 예정 소품 */
@@ -531,7 +550,7 @@ function SdmTab({data,setData,coupleKey,showT}){const[show,setShow]=useState(fal
   const[cbG,setCbG]=useState({...CB_EMPTY});const[cbErr,setCbErr]=useState("");
   const cbBuildNotes=()=>{const g=cbG;const fmt=v=>(v||"").split("|").filter(Boolean).join(", ");let n="";if(cbRecip==="studio"){const both=k=>[fmt(g[k]),(g[k+"_etc"]||"").trim()].filter(Boolean).join(", ");if(both("bg"))n+="선호하는 배경: "+both("bg")+"\n";if(both("pose"))n+="선호하는 포즈: "+both("pose")+"\n";if(both("props"))n+="활용 예정 소품: "+both("props")+"\n";}else if(cbRecip==="dress"){if(g.line)n+="선호 라인: "+fmt(g.line)+"\n";if(g.detail)n+="선호 디테일: "+fmt(g.detail)+"\n";}else{if(g.mood)n+="메이크업 분위기: "+fmt(g.mood)+"\n";if(g.skin)n+="피부/컬러: "+fmt(g.skin)+"\n";}if(g.extra)n+="추가 요청: "+g.extra;return n||"특별한 요청 없음";};
   const CB_BASE="절대 길게 쓰지 마세요. 번호 리스트, 키워드, 체크리스트 형태만 사용. 문장형 금지.\n\n중요 규칙:\n- 사진에서 분석할 수 있는 내용은 분석하여 작성\n- 파악 안 되는 항목은 가이드라인: [여기에 OOO을 적어주세요] 형태로\n\nJSON 형식으로만 응답. 백틱/마크다운 금지. 문자열 안에 줄바꿈은 반드시 \\n으로.\n{\"title\":\"제목\",\"summary\":\"한줄요약\",\"mood\":\"키워드\",\"sections\":[{\"heading\":\"섹션명\",\"body\":\"내용\"}],\"concepts\":[{\"name\":\"컨셉명\",\"photoIndices\":[0,1],\"details\":\"내용\"}]}";
-  const CB_STUDIO_SYS="스튜디오 작가님께 전달할 촬영 컨셉 보드를 작성합니다. 예비 부부가 작가님께 드리는 자료이므로 정중한 ~합니다체로, 한 줄에 한 문장만 짧게 쓰세요.\n\n중요 규칙:\n- 사진에서 읽을 수 있는 내용은 분석해서 작성\n- 예비 신부가 고른 배경·포즈·소품은 반드시 반영\n- 파악 안 되는 내용은 [여기에 OOO을 적어주세요] 형태의 가이드라인으로\n\nJSON 형식으로만 응답. 백틱/마크다운 금지. 문자열 안 줄바꿈은 \\n.\n{\"title\":\"제목\",\"summary\":\"선호하는 분위기를 1~2문장으로 (예: 시크하고 정적인 분위기보다는 차분한 분위기 중심, 캐주얼/로드씬은 귀엽고 밝은 톤을 선호합니다.)\",\"mood\":\"키워드 3개\",\n\"wishes\":[{\"key\":\"bg\",\"label\":\"선호하는 배경\",\"lines\":[\"문장\"],\"photoIndices\":[0]},{\"key\":\"pose\",\"label\":\"선호하는 포즈\",\"lines\":[\"문장\"],\"photoIndices\":[1]},{\"key\":\"props\",\"label\":\"활용 예정 소품\",\"lines\":[\"소품명: 쓰고 싶은 장면\"],\"photoIndices\":[]}],\n\"props\":[\"소품명\"],\n\"concepts\":[{\"name\":\"컨셉명\",\"photoIndices\":[0,2],\"outfit\":\"의상\",\"hair\":\"헤어\",\"props\":\"소품\",\"pose\":\"포즈\"}]}\n\n- wishes: 반드시 bg, pose, props 3개, 각 lines는 2~3개\n- wishes의 photoIndices: 그 항목을 잘 보여주는 참고 사진 최대 3장\n- props: 소품 이름만 최대 5개\n- concepts: 사진을 로케이션/분위기별로 묶어 2~5개. 모르는 칸은 빈 문자열";
+  const CB_STUDIO_SYS="스튜디오 작가님께 전달할 촬영 컨셉 보드를 작성합니다. 예비 부부가 작가님께 드리는 자료이므로 정중한 ~합니다체로, 한 줄에 한 문장만 짧게 쓰세요.\n\n중요 규칙:\n- 사진에서 읽을 수 있는 내용은 분석해서 작성\n- 예비 신부가 고른 배경·포즈·소품은 반드시 반영\n- 파악 안 되는 내용은 [여기에 OOO을 적어주세요] 형태의 가이드라인으로\n\nJSON 형식으로만 응답. 백틱/마크다운 금지. 문자열 안 줄바꿈은 \\n.\n{\"title\":\"제목\",\"summary\":\"선호하는 분위기를 1~2문장으로 (예: 시크하고 정적인 분위기보다는 차분한 분위기 중심, 캐주얼/로드씬은 귀엽고 밝은 톤을 선호합니다.)\",\"mood\":\"키워드 3개\",\n\"wishes\":[{\"key\":\"bg\",\"label\":\"선호하는 배경\",\"lines\":[\"문장\"],\"photoIndices\":[0]},{\"key\":\"pose\",\"label\":\"선호하는 포즈\",\"lines\":[\"문장\"],\"photoIndices\":[1]},{\"key\":\"props\",\"label\":\"활용 예정 소품\",\"lines\":[\"소품명: 쓰고 싶은 장면\"],\"photoIndices\":[]}],\n\"props\":[\"소품명\"],\n\"concepts\":[{\"name\":\"컨셉명\",\"dress\":\"신부 드레스\",\"hair\":\"신부 헤어\",\"suit\":\"신랑 수트\",\"shoes\":\"신랑 구두\",\"bg\":{\"lines\":[\"짧은 문장\"],\"photoIndices\":[0]},\"pose\":{\"lines\":[\"짧은 문장\"],\"photoIndices\":[1]},\"props\":{\"lines\":[\"소품명\"],\"photoIndices\":[]}}]}\n\n- wishes: 반드시 bg, pose, props 3개, 각 lines는 2~3개\n- wishes의 photoIndices: 그 항목을 잘 보여주는 참고 사진 최대 3장\n- props: 소품 이름만 최대 5개\n- concepts: 사진을 로케이션/분위기별로 묶어 2~5개\n- concepts의 dress/hair/suit/shoes: 한 줄 키워드 (예: 레이스 튤, 그레이 + 흰색 넥타이). 모르면 빈 문자열\n- concepts의 bg/pose/props: lines는 1~2개, 각 20자 이내. photoIndices는 그 항목을 보여주는 사진 최대 2장 (같은 사진을 여러 항목에 써도 됨)";
 const CB_TYPES={studio:{l:"📷 스튜디오 작가님",sys:CB_STUDIO_SYS},
     dress:{l:"👗 드레스샵 실장님",sys:CB_BASE+"\n\nsections:\n1. 선호 드레스 스타일 - 라인, 넥라인, 소매\n2. 소재 & 디테일\n3. 원하는 분위기 - 키워드\n4. 피하고 싶은 스타일 (파악안되면 가이드라인)\n5. 참고사항\n\nconcepts: 사진별로 드레스 스타일을 그룹핑\n- name: 드레스 스타일명 (예: 클래식 A라인, 슬립드레스)\n- photoIndices: 해당 스타일 사진번호\n- details: 해당 드레스의 특징 키워드"},
     makeup:{l:"💄 메이크업 아티스트님",sys:CB_BASE+"\n\nsections:\n1. 전체 무드 - 키워드\n2. 베이스 메이크업\n3. 아이 메이크업\n4. 립 & 치크\n5. 헤어 스타일\n6. 피하고 싶은 것 (파악안되면 가이드라인)\n\nconcepts: 사진별 메이크업 스타일 그룹핑\n- name: 메이크업 무드명\n- photoIndices: 해당 사진번호\n- details: 해당 메이크업 특징"}};
@@ -547,7 +566,7 @@ const CB_TYPES={studio:{l:"📷 스튜디오 작가님",sys:CB_STUDIO_SYS},
     parsed._photoIds=usedIds;if(cbRecip==="studio")parsed=cbStudioView(parsed);
     setCbResult(parsed);setCbStep("result");}catch(e){console.error("cbAnalyze error:",e);cbFail(e?.message);}};
   /* 스튜디오 결과 → 앱 화면용 sections/details 로 변환 (PPT는 원본 구조 사용) */
-  const cbStudioView=r=>{const W=(r.wishes||[]);const sections=W.map(w=>({heading:w.label||({bg:"선호하는 배경",pose:"선호하는 포즈",props:"활용 예정 소품"})[w.key]||"",body:(w.lines||[]).map(x=>"- "+x).join("\n")}));const concepts=(r.concepts||[]).map(c=>({...c,details:[["의상",c.outfit],["헤어",c.hair],["소품",c.props],["포즈",c.pose]].filter(x=>x[1]).map(x=>x[0]+": "+x[1]).join("\n")}));return{...r,sections,concepts};};
+  const cbStudioView=r=>{const W=(r.wishes||[]);const sections=W.map(w=>({heading:w.label||({bg:"선호하는 배경",pose:"선호하는 포즈",props:"활용 예정 소품"})[w.key]||"",body:(w.lines||[]).map(x=>"- "+x).join("\n")}));const L=o=>(o&&o.lines||[]).join(", ");const concepts=(r.concepts||[]).map(c=>({...c,photoIndices:[...new Set([...(c.bg?.photoIndices||[]),...(c.pose?.photoIndices||[]),...(c.props?.photoIndices||[]),...(c.photoIndices||[])])],details:[["드레스",c.dress],["헤어",c.hair],["수트",c.suit],["구두",c.shoes],["선호 배경",L(c.bg)],["선호 포즈",L(c.pose)],["활용 소품",L(c.props)]].filter(x=>x[1]).map(x=>x[0]+": "+x[1]).join("\n")}));return{...r,sections,concepts};};
   /* 분석에 실제로 쓰인 사진 순서 그대로 (photoIndices가 어긋나지 않게) */
   const cbUsedPhotos=()=>{const liked=cbLikedByType(cbRecip);const ids=cbResult?._photoIds;if(!ids)return liked;return ids.map(id=>liked.find(p=>p.id===id)).filter(Boolean);};
   const cbDownloadPPT=async()=>{if(!cbResult||typeof PptxGenJS==="undefined"){showT("PPT 도구를 불러오는 중이에요. 잠시 후 다시 눌러주세요");return;}const pptx=new PptxGenJS();pptx.defineLayout({name:"WIDE",width:13.33,height:7.5});pptx.layout="WIDE";const liked=cbUsedPhotos();
