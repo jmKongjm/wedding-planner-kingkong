@@ -207,21 +207,24 @@ const PHOTO_GUIDE=[
    - 기준 일정이 아직 없으면 기존 "결혼 N개월 전" 단계 기한을 그대로 사용 */
 const SCHED={selectWithin:60,retouchDays:90,mobileMake:56,mobileSend:42,fittingBeforePhoto:28};
 let MS={};/* 현재 커플의 milestones — 테마(P)처럼 App 렌더 때 갱신 */
+/* 입력받는 기준 일정은 "다른 일들이 거기에 맞춰 움직이는 날"만.
+   - 촬영일: 핵심. 예복·반지·가봉·관리가 앞에서, 셀렉·보정·청첩장이 뒤에서 맞물림
+   - 촬영가봉일: 드레스샵이 정해주는 날. 비어 있으면 촬영 4주 전으로 추정
+   - 셀렉일: 보정 3개월이 이 날부터 시작
+   - 스드메 계약은 기준 일정이 아니라 "촬영가봉 전까지 끝내야 하는 할 일"이라 입력받지 않음 */
 const ANCHORS=[
-  {k:"sdmDate",l:"스드메 계약일",short:"스드메 계약"},
-  {k:"fittingDate",l:"촬영가봉일",short:"촬영가봉"},
-  {k:"photoDate",l:"촬영일",short:"촬영"},
+  {k:"fittingDate",l:"촬영가봉일",short:"촬영가봉",opt:true},
+  {k:"photoDate",l:"촬영일",short:"촬영",req:true},
   {k:"selectDate",l:"셀렉일",short:"셀렉",opt:true}
 ];
 /* 항목별 기준: [기준 일정, 일수] — 음수 = 그 일정 N일 전, 0 = 당일, 양수 = 이후 */
 const RULES={
-  s01:[["sdmDate",0]],                              // 플래너 → 스드메 제안·계약 전에
-  s04:[["sdmDate",0],["fittingDate",-30]],          // 스튜디오 컨셉을 촬영가봉에 반영하려면 미리 계약
+  s04:[["fittingDate",-30]],                        // 스튜디오 컨셉을 촬영가봉에 반영하려면 미리 계약
   s08:[["photoDate",-120]],                         // 반지 디자인은 제작 의뢰 1달 전쯤
   d05:[["photoDate",-90]],                          // 반지 제작 2~3개월 → 촬영 때 착용
   p05:[["photoDate",-7]],
-  d01:[["sdmDate",0],["fittingDate",-45]],
-  d02:[["sdmDate",0],["fittingDate",-30]],
+  d01:[["fittingDate",-45]],
+  d02:[["fittingDate",-30]],
   d03:[["photoDate",-90]],                          // 예복은 촬영 때 입어야 해서 촬영 기준
   d04:[["photoDate",-60]],
   p02:[["photoDate",-30]],
@@ -271,7 +274,8 @@ function msInfo(itemId,milestones,wd){const rs=RULES[itemId];if(!rs)return null;
 function anchorWarns(m,wd){m=m||{};const seq=[...ANCHORS.map(a=>({k:a.k,l:a.short,v:m[a.k]})),{k:"wedding",l:"결혼식",v:wd}].filter(x=>x.v);const w=[];
   for(let i=1;i<seq.length;i++)if(new Date(seq[i].v)<new Date(seq[i-1].v))w.push(seq[i-1].l+"보다 "+seq[i].l+" 날짜가 빨라요. 날짜를 다시 확인해주세요");
   if(m.fittingDate&&m.photoDate){const gap=(new Date(m.photoDate)-new Date(m.fittingDate))/864e5;if(gap>=0&&gap<14)w.push("촬영가봉과 촬영 사이가 "+Math.round(gap)+"일이에요. 드레스 수선 기간을 고려하면 보통 3~4주 간격을 둬요");}
-  if(m.sdmDate&&m.fittingDate){const gap=(new Date(m.fittingDate)-new Date(m.sdmDate))/864e5;if(gap>=0&&gap<30)w.push("스드메 계약 후 촬영가봉까지 "+Math.round(gap)+"일이에요. 촬영 컨셉을 정할 시간이 빠듯할 수 있어요");}
+  /* 촬영 → 셀렉(약 1개월) → 보정 3개월 → 모바일 청첩장(결혼 8주 전)에 사진을 쓰려면 */
+  if(m.photoDate&&wd){const latest=addDays(wd,-(SCHED.mobileMake+SCHED.retouchDays+30));if(new Date(m.photoDate)>latest)w.push("촬영 후 셀렉·보정(약 3개월)을 거쳐 모바일 청첩장(결혼 8주 전)에 사진을 쓰려면 촬영은 "+md(latest)+" 전후까지가 여유로워요. 청첩장용 사진 몇 장을 먼저 보정해 줄 수 있는지 스튜디오에 미리 확인해보세요");}
   return w;}
 function msDeadline(itemId,milestones,wd){return msInfo(itemId,milestones,wd)?.date||null;}
 /* 연결 고리가 끊길 때 경고: 수정본이 청첩장 제작보다 늦게 나오는 경우 등 */
@@ -281,7 +285,7 @@ function msWarn(itemId,milestones,wd){if(!wd)return null;const m=milestones||{};
   if(itemId==="sl01"&&m.photoDate&&!m.selectDate){const byPhoto=addDays(m.photoDate,SCHED.selectWithin);const byInv=addDays(wd,-(SCHED.mobileMake+SCHED.retouchDays));if(byInv<byPhoto)return"청첩장 일정을 맞추려면 촬영 후 2개월보다 빠른 "+md(byInv)+"까지 셀렉하셔야 해요";}
   return null;}
 const CL_VER=2;
-function fresh(){return{clVer:CL_VER,planStart:new Date().toISOString().slice(0,10),groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],milestones:{sdmDate:"",photoDate:"",fittingDate:"",selectDate:""},checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
+function fresh(){return{clVer:CL_VER,planStart:new Date().toISOString().slice(0,10),groomName:"",brideName:"",weddingDate:"",weddingTime:"12:00",theme:"garden",motto:"",dismissedReminders:[],milestones:{photoDate:"",fittingDate:"",selectDate:""},checklist:JSON.parse(JSON.stringify(CL_TEMPLATE)).map(p=>({...p,items:p.items.map(i=>({...i,done:false,memo:""}))})),budget:[],contacts:[],keyDates:[],sdmVendors:[],sdmPhotos:[]};}
 function migrateData(d){if(!d)return d;if(!d.theme)d.theme="garden";if(!d.motto)d.motto="";if(!d._deletedIds)d._deletedIds=[];if(!d.dismissedReminders)d.dismissedReminders=[];if(!d.milestones)d.milestones={photoDate:"",fittingDate:""};if(d.milestones.mainFittingDate!==undefined)delete d.milestones.mainFittingDate;
   if(d.keyDates)d.keyDates=d.keyDates.filter(k=>k.id!=="auto_photo"&&k.id!=="auto_fitting");
   if(!d.checklist)return d;
@@ -478,11 +482,12 @@ function CLTab({data,setData}){const wd=data.weddingDate;const[memoId,setMemoId]
       })()}
     </Modal>
     <Modal title="항목 추가" open={addPi!==null} onClose={()=>setAddPi(null)}><div style={{marginBottom:18}}><label style={S.lbl}>할 일</label><input style={MI} placeholder="예: 피부관리" value={addF.text} onChange={e=>setAddF({...addF,text:e.target.value})}/></div><div style={{marginBottom:18}}><label style={S.lbl}>카테고리</label><select style={MI} value={addF.cat} onChange={e=>setAddF({...addF,cat:e.target.value})}>{Object.entries(CAT).map(([k,c])=><option key={k} value={k}>{c.ic} {c.n}</option>)}<option value="__custom__">✏️ 직접 입력</option></select></div>{addF.cat==="__custom__"&&<div style={{marginBottom:18}}><label style={S.lbl}>카테고리명</label><input style={MI} value={addF.customCatName} onChange={e=>setAddF({...addF,customCatName:e.target.value})}/></div>}<button style={{...S.btn,width:"100%"}} onClick={addItem}>추가</button></Modal>
-    {wd&&<div style={{...S.card,marginBottom:20,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,padding:"16px 18px"}}><div style={{fontSize:14,color:P.periDk,fontWeight:700,marginBottom:6}}>📌 주요 일정 먼저 입력하기</div><div style={{fontSize:12,color:P.textSub,marginBottom:12,lineHeight:1.6}}>아래 일정이 정해지면 관련 할 일의 기한이 "결혼 N개월 전" 대신 <b>실제 일정에 맞춰</b> 자동으로 바뀌어요.<br/>예: 예복은 촬영 때 입어야 하니 촬영일 기준, 스튜디오는 촬영가봉 전에 계약해야 컨셉을 반영할 수 있어요.<br/>각 항목 옆에 어떤 일정 기준인지 함께 표시돼요</div>
+    {wd&&<div style={{...S.card,marginBottom:20,background:`linear-gradient(135deg,${P.greenBg},${P.blueBg})`,padding:"16px 18px"}}><div style={{fontSize:14,color:P.periDk,fontWeight:700,marginBottom:6}}>📌 주요 일정 먼저 입력하기</div><div style={{fontSize:12,color:P.textSub,marginBottom:12,lineHeight:1.6}}>일정이 정해지면 관련 할 일의 기한이 "결혼 N개월 전" 대신 <b>실제 일정에 맞춰</b> 자동으로 바뀌어요.<br/><b>촬영일</b>이 가장 중요해요 — 예복·반지·촬영가봉·스드메 계약은 촬영 전에, 셀렉·보정·청첩장은 촬영 뒤에 이어져요.<br/>각 항목 옆에 어떤 일정 기준인지 함께 표시돼요</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {ANCHORS.map((m,ai)=>{const est=!data.milestones?.[m.k]&&anchorDate(m.k,data.milestones,wd)?.est;return<div key={m.k} style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:96}}><span style={{color:P.textMuted,fontWeight:400,marginRight:4}}>{ai+1}</span>{m.l}{m.opt&&<span style={{fontSize:11,color:P.textMuted,fontWeight:400}}> (선택)</span>}</label><input type="date" style={{...MI,padding:"8px 10px",fontSize:13,flex:1}} value={data.milestones?.[m.k]||""} onChange={e=>setData({...data,milestones:{...data.milestones,[m.k]:e.target.value}})}/>{est&&<span style={{fontSize:11,color:P.textMuted,whiteSpace:"nowrap"}}>예상 {md(anchorDate(m.k,data.milestones,wd).date)}</span>}</div>;})}
+        {ANCHORS.map((m,ai)=>{const est=!data.milestones?.[m.k]&&anchorDate(m.k,data.milestones,wd)?.est;return<div key={m.k} style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:96}}><span style={{color:P.textMuted,fontWeight:400,marginRight:4}}>{ai+1}</span>{m.l}{m.opt&&<span style={{fontSize:11,color:P.textMuted,fontWeight:400}}> (선택)</span>}{m.req&&<span style={{fontSize:11,color:"#C0504D",fontWeight:600}}> (필수)</span>}</label><input type="date" style={{...MI,padding:"8px 10px",fontSize:13,flex:1}} value={data.milestones?.[m.k]||""} onChange={e=>setData({...data,milestones:{...data.milestones,[m.k]:e.target.value}})}/>{est&&<span style={{fontSize:11,color:P.textMuted,whiteSpace:"nowrap"}}>예상 {md(anchorDate(m.k,data.milestones,wd).date)}</span>}</div>;})}
         <div style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:13,fontWeight:600,color:P.text,minWidth:96}}><span style={{color:P.textMuted,fontWeight:400,marginRight:4}}>{ANCHORS.length+1}</span>결혼식</label><div style={{fontSize:13,color:P.text,padding:"8px 10px"}}>{wd} <span style={{fontSize:11,color:P.textMuted}}>(설정에서 변경)</span></div></div>
       </div>
+      {!data.milestones?.photoDate&&<div style={{fontSize:12,color:P.periDk,marginTop:8,lineHeight:1.5}}>💡 촬영일을 입력하면 예복·반지·셀렉·청첩장 기한이 촬영 일정에 맞춰져요</div>}
       {anchorWarns(data.milestones,wd).map((w,i)=><div key={i} style={{fontSize:12,color:"#C0504D",marginTop:8,lineHeight:1.5}}>⚠️ {w}</div>)}
     </div>}
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
