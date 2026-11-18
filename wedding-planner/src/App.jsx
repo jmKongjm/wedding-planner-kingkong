@@ -25,6 +25,34 @@ const XMAS_IC={checklist:"🎄",budget:"🎁",sdm:"⭐",schedule:"🔔"};
 const tabIc=(id,def)=>P===THEMES.xmas&&XMAS_IC[id]?XMAS_IC[id]:def;
 let P=THEMES.garden;
 
+/* ═══ Winter holiday scene (xmas theme D-day card): snow, string lights, trees ═══ */
+function WTree({w,o=1,s}){return<svg viewBox="0 0 100 140" width={w} style={{display:"block",opacity:o,...s}} xmlns="http://www.w3.org/2000/svg">
+  <rect x="44" y="118" width="12" height="20" rx="2" fill="#B89A7A"/>
+  <path d="M50 14 L84 122 Q50 132 16 122 Z" fill="#7E9C88"/>
+  <path d="M50 14 L76 92 Q50 100 24 92 Z" fill="#8FAA97"/>
+  <path d="M50 14 L68 62 Q50 68 32 62 Z" fill="#A3BBA9"/>
+  <path d="M32 62 Q38 58 41 63 Q46 57 50 63 Q55 57 59 63 Q63 58 68 62 Q50 70 32 62Z" fill="#fff" opacity="0.92"/>
+  <path d="M24 92 Q31 87 35 93 Q41 86 46 93 Q52 86 57 93 Q63 87 67 93 Q72 88 76 92 Q50 102 24 92Z" fill="#fff" opacity="0.92"/>
+  <path d="M16 122 Q24 116 29 123 Q36 115 42 123 Q49 115 55 123 Q62 115 68 123 Q75 116 84 122 Q50 134 16 122Z" fill="#fff" opacity="0.95"/>
+  <circle cx="43" cy="50" r="3.2" fill="#DCA4A1"/><circle cx="58" cy="78" r="3.4" fill="#E9C97A"/><circle cx="38" cy="82" r="3" fill="#fff"/><circle cx="62" cy="108" r="3.6" fill="#DCA4A1"/><circle cx="36" cy="110" r="3.2" fill="#E9C97A"/><circle cx="50" cy="100" r="2.8" fill="#fff"/>
+  <path className="wn-star" d="M50 2 L53.2 10.2 L62 10.8 L55.2 16.4 L57.4 25 L50 20.2 L42.6 25 L44.8 16.4 L38 10.8 L46.8 10.2 Z" fill="#F0CB6B"/>
+</svg>;}
+const W_BULB=["#F3CC7E","#E9ADA8","#F8E6B8","#A9C9B4"];
+function WinterScene(){
+  const flakes=Array.from({length:28},(_,i)=>({l:(i*37+11)%100,sz:3+(i*7)%5,d:7+(i*5)%8,dl:-((i*13)%90)/10,o:0.55+((i*3)%5)/10,sw:2.5+(i%4)}));
+  const bulbs=[];for(let k=0;k<10;k++){[[30,15],[60,18],[90,15]].forEach(([x,y],j)=>bulbs.push({x:k*120+x,y,c:W_BULB[(k*3+j)%4],i:k*3+j}));}
+  return<div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",borderRadius:"inherit"}}>
+    <div style={{position:"absolute",left:"50%",top:"46%",width:"70%",height:"85%",transform:"translate(-50%,-50%)",background:"radial-gradient(closest-side,rgba(255,238,196,0.75),rgba(255,238,196,0))"}}/>
+    <svg viewBox="0 0 1200 50" preserveAspectRatio="xMidYMin slice" style={{position:"absolute",top:0,left:0,width:"100%",height:50}} xmlns="http://www.w3.org/2000/svg">
+      <path d={"M0 6 "+Array.from({length:10},(_,k)=>"Q"+(k*120+60)+" 30 "+(k*120+120)+" 6").join(" ")} fill="none" stroke="#8C9E90" strokeWidth="1.4"/>
+      {bulbs.map(b=><g key={b.i} className="wn-bulb" style={{animationDelay:(b.i%5)*0.45+"s"}}><circle cx={b.x} cy={b.y+7} r="9" fill={b.c} opacity="0.35"/><rect x={b.x-2} y={b.y-1} width="4" height="4" rx="1" fill="#8C9E90"/><ellipse cx={b.x} cy={b.y+7.5} rx="4.2" ry="5.6" fill={b.c}/><ellipse cx={b.x-1.2} cy={b.y+5.8} rx="1.1" ry="1.8" fill="#fff" opacity="0.7"/></g>)}
+    </svg>
+    <svg viewBox="0 0 600 60" preserveAspectRatio="none" style={{position:"absolute",bottom:0,left:0,width:"100%",height:54}} xmlns="http://www.w3.org/2000/svg"><path d="M0 34 Q80 8 170 26 T340 24 T500 18 T600 30 V60 H0Z" fill="#fff" opacity="0.75"/><path d="M0 46 Q120 24 250 40 T470 36 T600 42 V60 H0Z" fill="#fff"/></svg>
+    <div className="wn-trees" style={{position:"absolute",left:14,bottom:6,display:"flex",alignItems:"flex-end",transformOrigin:"bottom left"}}><WTree w={104}/><WTree w={62} o={0.85} s={{marginLeft:-18}}/></div>
+    <div className="wn-trees wn-right" style={{position:"absolute",right:16,bottom:6,display:"flex",alignItems:"flex-end",transformOrigin:"bottom right"}}><WTree w={56} o={0.85} s={{marginRight:-14}}/><WTree w={88}/></div>
+    {flakes.map((f,i)=><div key={i} className="wn-col" style={{left:f.l+"%",animationDuration:f.d+"s",animationDelay:f.dl+"s"}}><i className="wn-flake" style={{width:f.sz,height:f.sz,opacity:f.o,animationDuration:f.sw+"s"}}/></div>)}
+  </div>;}
+
 function Fl1({s}){return<svg viewBox="0 0 120 120" style={{position:"absolute",opacity:0.15,pointerEvents:"none",...s}} xmlns="http://www.w3.org/2000/svg"><defs><filter id="a"><feGaussianBlur stdDeviation="2.5"/></filter></defs><g filter="url(#a)">{[0,72,144,216,288].map((r,i)=><ellipse key={i} cx="60" cy="35" rx="22" ry="28" fill={i%2?P.blue:P.peri} transform={`rotate(${r} 60 60)`}/>)}<circle cx="60" cy="60" r="12" fill={P.lav}/></g></svg>;}
 function Fl2({s}){return<svg viewBox="0 0 100 60" style={{position:"absolute",opacity:0.13,pointerEvents:"none",...s}} xmlns="http://www.w3.org/2000/svg"><defs><filter id="b"><feGaussianBlur stdDeviation="1.5"/></filter></defs><g filter="url(#b)"><path d="M50 55Q30 30 15 40Q0 50 20 55Z" fill={P.green}/><path d="M50 55Q70 30 85 40Q100 50 80 55Z" fill={P.greenLt}/><path d="M50 55Q40 15 50 5Q60 15 50 55Z" fill={P.greenDk}/></g></svg>;}
 
@@ -393,7 +421,7 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
         <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"center"}}><button onClick={()=>confirmReminder(d1Reminders[0].id)} style={{padding:"12px 24px",background:P.btnBg,color:"#fff",border:"none",borderRadius:12,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:FONT}}>확인했어요</button><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 20px",background:P.periLt,color:P.periDk,border:"none",borderRadius:12,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:FONT}}>다시 보지 않기</button></div>
       </div>
     </div>}
-    <div style={S.dday}><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/><div style={{position:"relative",zIndex:1}}>
+    <div className={P===THEMES.xmas?"dday-winter":""} style={P===THEMES.xmas?{...S.dday,background:"linear-gradient(180deg,#CFE0D5 0%,#E3ECE4 48%,#F7F0DF 100%)"}:S.dday}>{P===THEMES.xmas?<WinterScene/>:<><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/></>}<div style={{position:"relative",zIndex:1}}>
       {/* Couple heart line art — always visible */}
       <div style={{position:"relative",textAlign:"center"}}>
         <img src={COUPLE_ART} className="couple-heart-art" alt="" style={{width:"100%",maxWidth:300,margin:"0 auto",display:"block",position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",pointerEvents:"none"}}/>
@@ -1003,6 +1031,17 @@ body[data-theme=xmas] .note-tape::before{background:repeating-linear-gradient(90
 /* Checklist chevron stepper */
 .ph-steps{scrollbar-width:none;}.ph-steps::-webkit-scrollbar{display:none;}
 .ph-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:30px;height:30px;border-radius:15px;border:1px solid ${P.border};background:#fff;color:${P.textSub};font-size:20px;line-height:26px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.06);padding:0;}
+/* Winter scene */
+.dday-winter{padding-top:52px !important;padding-bottom:44px !important;}
+.wn-col{position:absolute;top:0;height:100%;width:1px;animation:wn-fall linear infinite;will-change:transform;}
+.wn-flake{position:absolute;bottom:0;left:0;border-radius:50%;background:#fff;box-shadow:0 0 5px rgba(255,255,255,0.9);animation:wn-sway ease-in-out infinite alternate;}
+@keyframes wn-fall{from{transform:translateY(-104%);}to{transform:translateY(6%);}}
+@keyframes wn-sway{from{transform:translateX(-7px);}to{transform:translateX(9px);}}
+.wn-bulb{animation:wn-twinkle 2.4s ease-in-out infinite alternate;}
+@keyframes wn-twinkle{from{opacity:0.55;}to{opacity:1;}}
+.wn-star{animation:wn-twinkle 1.8s ease-in-out infinite alternate;}
+@media(max-width:768px){.wn-trees{transform:scale(0.62);left:4px !important;}.wn-trees.wn-right{left:auto !important;right:4px !important;}}
+@media(prefers-reduced-motion:reduce){.wn-col,.wn-flake,.wn-bulb,.wn-star{animation:none !important;}.wn-col{display:none;}}
 /* Login title */
 .login-title{font-family:${HW} !important;font-weight:700 !important;}
 @media(max-width:768px){.side-nav{display:none !important;}.mob-nav{display:flex !important;}.mob-more{display:block !important;}.main-area{margin-left:0 !important;padding:14px 14px 100px !important;}.sched-grid,.bud-panels{grid-template-columns:1fr !important;}.budget-summary>div{display:flex;justify-content:space-between;align-items:baseline;}.budget-summary{gap:6px !important;}.dday-num{font-size:52px !important;}.couple-name{font-size:21px !important;}.couple-row{gap:14px !important;}.stat-grid,.budget-summary{grid-template-columns:1fr !important;}.budget-main{font-size:24px !important;}.budget-num{font-size:22px !important;}.vendor-grid{grid-template-columns:1fr !important;}.modal-inner{padding:20px 14px !important;margin:6px;border-radius:16px !important;max-height:88vh !important;}.cal-cell{min-height:38px !important;padding:2px !important;}.cal-cell .cal-ev{display:none !important;}.cal-cell .cal-dot{display:flex !important;}.sdm-vendor-btns{flex-wrap:wrap !important;gap:5px !important;}.cl-item-wrap{flex-direction:column !important;align-items:flex-start !important;gap:4px !important;}.budget-detail{flex-wrap:wrap !important;}.contact-card{cursor:pointer;}.couple-heart-art{max-width:220px !important;}.motto-text{font-size:19px !important;}.tab-guide{font-size:14px !important;margin-bottom:12px !important;}.tab-title{font-size:20px !important;}.schedule-form-row{flex-direction:column !important;gap:10px !important;}.schedule-item{flex-direction:column !important;align-items:flex-start !important;gap:8px !important;}.schedule-item-btns{align-self:flex-end !important;}.theme-selector{flex-direction:column !important;gap:8px !important;}.theme-btn{padding:10px 8px !important;}.d1-popup{padding:28px 20px !important;}.d1-popup-dday{font-size:36px !important;}.d1-popup-name{font-size:17px !important;}.tip-text{font-size:15px !important;line-height:1.7 !important;}.note-tape::before{width:40px;height:10px;top:-4px;}}@media(max-width:420px){.chatbot-widget{width:calc(100vw - 24px) !important;right:12px !important;bottom:66px !important;max-height:65vh !important;}.dday-num{font-size:48px !important;}.couple-heart-art{max-width:180px !important;}.motto-text{font-size:16px !important;}.d1-popup{padding:24px 16px !important;}.d1-popup-dday{font-size:30px !important;}}input:focus,select:focus,textarea:focus{border-color:${P.peri} !important;box-shadow:0 0 0 3px rgba(146,173,216,0.15) !important;}button:hover{opacity:0.88;}*{-webkit-font-smoothing:antialiased;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}.cal-dot{display:none;gap:3px;justify-content:center;margin-top:2px;}.chatbot-widget{width:360px;}`;document.head.appendChild(se);
