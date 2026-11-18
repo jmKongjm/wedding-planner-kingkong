@@ -37,8 +37,84 @@ function WTree({w,o=1,s}){return<svg viewBox="0 0 100 140" width={w} style={{dis
   <circle cx="43" cy="50" r="3.2" fill="#DCA4A1"/><circle cx="58" cy="78" r="3.4" fill="#E9C97A"/><circle cx="38" cy="82" r="3" fill="#fff"/><circle cx="62" cy="108" r="3.6" fill="#DCA4A1"/><circle cx="36" cy="110" r="3.2" fill="#E9C97A"/><circle cx="50" cy="100" r="2.8" fill="#fff"/>
   <path className="wn-star" d="M50 2 L53.2 10.2 L62 10.8 L55.2 16.4 L57.4 25 L50 20.2 L42.6 25 L44.8 16.4 L38 10.8 L46.8 10.2 Z" fill="#F0CB6B"/>
 </svg>;}
+/* 겨울옷을 입은 두 사람: 결혼식이 다가올수록 가까이 걸어오고, D-30부터 반지 낀 두 손으로 바뀜 */
+function WinterCouple({dd}){
+  const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),lp=(a,b,t)=>a+(b-a)*t;const d=Math.max(dd,0);
+  const t=cl(1-d/365,0,1),e=t*t*(3-2*t),near=cl((30-d)/20,0,1);
+  const sc=lp(0.42,1.38,Math.pow(e,1.15)),x=lp(16,0,e),sink=lp(0,50,cl((sc-0.6)/0.78,0,1));
+  const skinB="#F6D7C3",skinG="#FBE3D3",lnB="#E3BBA3",lnG="#EBC6AF";
+  return<>
+    {near<1&&<><div className="wn-cshadow" style={{left:"calc(50% + "+x+"%)",transform:"translateX(-50%) scale(calc(var(--wk,1)*"+sc.toFixed(3)+"))",opacity:(cl(1-sink/18,0,1)*(1-near)).toFixed(2)}}/>
+    <div className="wn-couple" style={{left:"calc(50% + "+x+"%)",transform:"translateX(-50%) translateY("+sink.toFixed(1)+"%) scale(calc(var(--wk,1)*"+sc.toFixed(3)+"))",opacity:(1-near).toFixed(2)}}>
+      <svg viewBox="0 0 240 262" xmlns="http://www.w3.org/2000/svg" style={{display:"block",width:"100%",overflow:"visible"}}><g className="wn-bob">
+        {/* 신랑 */}
+        <g className="wn-legA"><rect x="70" y="186" width="15" height="52" rx="7" fill="#5B6470"/><ellipse cx="79" cy="240" rx="13" ry="7" fill="#8A6A52"/></g>
+        <g className="wn-legB"><rect x="89" y="186" width="15" height="52" rx="7" fill="#525B67"/><ellipse cx="98" cy="240" rx="13" ry="7" fill="#7C5E48"/></g>
+        <path d="M60 198 Q58 120 87 114 Q116 120 114 198 Q87 208 60 198Z" fill="#6F86A8"/>
+        <path d="M87 118 V202" stroke="#5E7595" strokeWidth="2"/><circle cx="92" cy="146" r="2.6" fill="#DCE4EF"/><circle cx="92" cy="166" r="2.6" fill="#DCE4EF"/><path d="M66 176 h14" stroke="#5E7595" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M64 130 Q54 156 60 180" fill="none" stroke="#6F86A8" strokeWidth="15" strokeLinecap="round"/><circle cx="60" cy="184" r="9" fill="#C9D3DE"/>
+        <path d="M108 128 Q122 148 121 170" fill="none" stroke="#647B9C" strokeWidth="15" strokeLinecap="round"/>
+        <g transform="rotate(5 87 80)">
+          <circle cx="87" cy="80" r="31" fill="#F8DCC8"/>
+          <path d="M57 78 Q56 46 87 45 Q118 46 117 78 Q104 62 87 62 Q70 62 57 78Z" fill="#5A4638"/>
+          <path d="M55 70 Q56 36 87 35 Q118 36 119 70 Q87 58 55 70Z" fill="#7E9C88"/><rect x="53" y="64" width="68" height="12" rx="6" fill="#93AE9B"/><path d="M62 70 v-4 M74 71 v-5 M87 71 v-5 M100 71 v-5 M112 70 v-4" stroke="#7E9C88" strokeWidth="2" strokeLinecap="round"/><circle cx="87" cy="32" r="8" fill="#fff"/>
+          <circle cx="90" cy="86" r="3.4" fill="#3D332C"/><circle cx="106" cy="86" r="3.4" fill="#3D332C"/><circle cx="91.2" cy="84.8" r="1.1" fill="#fff"/><circle cx="107.2" cy="84.8" r="1.1" fill="#fff"/>
+          <ellipse cx="82" cy="95" rx="6" ry="3.6" fill="#F4B6A8" opacity="0.8"/><ellipse cx="111" cy="95" rx="5" ry="3.4" fill="#F4B6A8" opacity="0.8"/>
+          <path d="M94 96 Q99 101 104 96" fill="none" stroke="#B5705F" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+        <path d="M62 108 Q87 122 112 108 L112 120 Q87 134 62 120Z" fill="#D98C86"/><path d="M70 120 L66 150 L80 150 L80 124Z" fill="#CC7B75"/><path d="M68 146 v4 M73 146 v4 M78 146 v4" stroke="#B96A64" strokeWidth="1.5"/>
+        {/* 신부 */}
+        <g className="wn-legB"><rect x="141" y="194" width="13" height="44" rx="6" fill="#8A6F63"/><ellipse cx="146" cy="240" rx="12" ry="7" fill="#A9826A"/></g>
+        <g className="wn-legA"><rect x="158" y="194" width="13" height="44" rx="6" fill="#7D6358"/><ellipse cx="166" cy="240" rx="12" ry="7" fill="#9A745E"/></g>
+        <path d="M127 92 Q120 130 130 150 L182 150 Q192 130 185 92Z" fill="#7A5846"/>
+        <path d="M122 206 Q128 124 156 116 Q184 124 190 206 Q156 218 122 206Z" fill="#F7ECDB"/><path d="M122 206 Q156 218 190 206 Q190 212 188 214 Q156 226 124 214 Q122 212 122 206Z" fill="#fff"/>
+        <path d="M156 122 V208" stroke="#E4D2B8" strokeWidth="2"/><circle cx="151" cy="150" r="3" fill="#C9A77E"/><circle cx="151" cy="172" r="3" fill="#C9A77E"/><circle cx="151" cy="194" r="3" fill="#C9A77E"/>
+        <path d="M178 132 Q190 158 184 182" fill="none" stroke="#F7ECDB" strokeWidth="14" strokeLinecap="round"/><circle cx="184" cy="186" r="8.5" fill="#E9B7B2"/>
+        <path d="M135 130 Q121 150 121 170" fill="none" stroke="#EFE0CA" strokeWidth="14" strokeLinecap="round"/>
+        <g transform="rotate(-5 156 82)">
+          <circle cx="156" cy="82" r="30" fill="#FBE3D3"/>
+          <path d="M127 84 Q124 50 156 48 Q188 50 185 84 Q178 64 156 64 Q138 64 127 84Z" fill="#7A5846"/><path d="M134 70 Q146 60 160 66 Q150 72 140 80Z" fill="#8A6652"/>
+          <ellipse cx="160" cy="50" rx="33" ry="13" transform="rotate(-8 160 50)" fill="#C97C78"/><circle cx="170" cy="36" r="4.5" fill="#B66B67"/>
+          <circle cx="140" cy="88" r="3.4" fill="#3D332C"/><circle cx="156" cy="88" r="3.4" fill="#3D332C"/><circle cx="138.8" cy="86.8" r="1.1" fill="#fff"/><circle cx="154.8" cy="86.8" r="1.1" fill="#fff"/>
+          
+          <ellipse cx="134" cy="97" rx="5" ry="3.4" fill="#F5A9A0" opacity="0.85"/><ellipse cx="163" cy="97" rx="6" ry="3.6" fill="#F5A9A0" opacity="0.85"/>
+          <path d="M143 98 Q148 103 153 98" fill="none" stroke="#C06A5E" strokeWidth="2" strokeLinecap="round"/>
+        </g>
+        <path d="M132 110 Q156 124 180 110 L180 122 Q156 136 132 122Z" fill="#E9C97A"/><path d="M172 122 L176 152 L162 152 L162 126Z" fill="#DDBA63"/><path d="M164 148 v4 M169 148 v4 M174 148 v4" stroke="#C9A54E" strokeWidth="1.5"/>
+        {/* 맞잡은 손과 하트 */}
+        <circle cx="117" cy="173" r="9" fill="#C9D3DE"/><circle cx="125" cy="173" r="8.5" fill="#E9B7B2"/>
+        <path className="wn-heart" d="M121 138 c-5 -8 -16 -3 -13 5 c2 5 8 8 13 12 c5 -4 11 -7 13 -12 c3 -8 -8 -13 -13 -5z" fill="#E58A8A"/>
+      </g></svg>
+    </div></>}
+    {near>0&&<div className="wn-hands" style={{opacity:near.toFixed(2),transform:"translateX(-50%) translateY("+lp(24,0,near).toFixed(1)+"px) scale("+lp(0.9,1,near).toFixed(3)+")"}}>
+      <svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg" style={{display:"block",width:"100%",overflow:"visible"}}>
+        {/* 소매: 화면 양쪽 끝에서 가운데로 */}
+        <path d="M-900 150 Q-200 132 118 84" fill="none" stroke="#6F86A8" strokeWidth="58" strokeLinecap="round"/>
+        <path d="M1300 150 Q600 132 282 84" fill="none" stroke="#E6D5BC" strokeWidth="57" strokeLinecap="round"/><path d="M1300 150 Q600 132 282 84" fill="none" stroke="#F5EADA" strokeWidth="53" strokeLinecap="round"/>
+        {/* 신랑 니트 소매 끝 */}
+        <g transform="rotate(-9 124 82)"><rect x="104" y="50" width="30" height="64" rx="8" fill="#DCE4EF"/><path d="M111 54 v56 M119 54 v56 M127 54 v56" stroke="#BFCBDB" strokeWidth="2"/></g>
+        {/* 신부 퍼 소매 끝 */}
+        <g fill="#fff"><circle cx="278" cy="56" r="13"/><circle cx="286" cy="72" r="14"/><circle cx="284" cy="92" r="14"/><circle cx="276" cy="108" r="12"/><circle cx="270" cy="80" r="15"/></g>
+        {/* 손바닥 */}
+        <rect x="128" y="46" width="92" height="70" rx="30" fill={skinB} stroke={lnB} strokeWidth="1.5"/>
+        <rect x="180" y="46" width="92" height="70" rx="30" fill={skinG} stroke={lnG} strokeWidth="1.5"/>
+        {/* 깍지 낀 손가락: 신부(오른쪽에서)와 신랑(왼쪽에서)이 번갈아 */}
+        {[0,1,2,3,4,5].map(i=>{const g=i%2===0,y=45+i*12;return<rect key={i} x={g?166:176} y={y} width="58" height="12.5" rx="6.25" fill={g?skinG:skinB} stroke={g?lnG:lnB} strokeWidth="1.3"/>;})}
+        {/* 엄지 */}
+        <ellipse cx="186" cy="40" rx="24" ry="10" transform="rotate(-12 186 40)" fill={skinB} stroke={lnB} strokeWidth="1.3"/>
+        <ellipse cx="214" cy="121" rx="23" ry="9.5" transform="rotate(-10 214 121)" fill={skinG} stroke={lnG} strokeWidth="1.3"/>
+        {/* 신랑 반지 (플랫 밴드) */}
+        <rect x="181" y="80.4" width="8" height="13.7" rx="2.5" fill="#EBC76E" stroke="#C9A24A" strokeWidth="1.2"/><path d="M183.4 82.5 v9.5" stroke="#F8E3A6" strokeWidth="1.4" strokeLinecap="round"/>
+        {/* 신부 반지 (다이아) */}
+        <rect x="207" y="68.4" width="8" height="13.7" rx="2.5" fill="#EBC76E" stroke="#C9A24A" strokeWidth="1.2"/>
+        <path d="M211 55.5 l6.5 5.5 l-6.5 8 l-6.5 -8z" fill="#EAF6FF" stroke="#A9CDE6" strokeWidth="1.3" strokeLinejoin="round"/><path d="M204.5 61 h13 M211 55.5 l-2.4 5.5 l2.4 8 l2.4 -8z" fill="none" stroke="#A9CDE6" strokeWidth="0.9"/>
+        <g className="wn-spark" fill="#fff"><path d="M228 44 l2.2 6 l6 2.2 l-6 2.2 l-2.2 6 l-2.2 -6 l-6 -2.2 l6 -2.2z"/><path d="M166 70 l1.5 4 l4 1.5 l-4 1.5 l-1.5 4 l-1.5 -4 l-4 -1.5 l4 -1.5z"/><path d="M246 98 l1.3 3.6 l3.6 1.3 l-3.6 1.3 l-1.3 3.6 l-1.3 -3.6 l-3.6 -1.3 l3.6 -1.3z"/></g>
+        <path className="wn-heart" d="M200 16 c-4 -7 -14 -3 -11 4.5 c1.8 4.2 7 7 11 10.5 c4 -3.5 9.2 -6.3 11 -10.5 c3 -7.5 -7 -11.5 -11 -4.5z" fill="#E58A8A"/>
+      </svg>
+    </div>}
+  </>;}
 const W_BULB=["#F3CC7E","#E9ADA8","#F8E6B8","#A9C9B4"];
-function WinterScene(){
+function WinterScene({dd}){
   const flakes=Array.from({length:28},(_,i)=>({l:(i*37+11)%100,sz:3+(i*7)%5,d:7+(i*5)%8,dl:-((i*13)%90)/10,o:0.55+((i*3)%5)/10,sw:2.5+(i%4)}));
   const bulbs=[];for(let k=0;k<10;k++){[[30,15],[60,18],[90,15]].forEach(([x,y],j)=>bulbs.push({x:k*120+x,y,c:W_BULB[(k*3+j)%4],i:k*3+j}));}
   return<div aria-hidden="true" style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",borderRadius:"inherit"}}>
@@ -50,6 +126,7 @@ function WinterScene(){
     <svg viewBox="0 0 600 60" preserveAspectRatio="none" style={{position:"absolute",bottom:0,left:0,width:"100%",height:54}} xmlns="http://www.w3.org/2000/svg"><path d="M0 34 Q80 8 170 26 T340 24 T500 18 T600 30 V60 H0Z" fill="#fff" opacity="0.75"/><path d="M0 46 Q120 24 250 40 T470 36 T600 42 V60 H0Z" fill="#fff"/></svg>
     <div className="wn-trees" style={{position:"absolute",left:14,bottom:6,display:"flex",alignItems:"flex-end",transformOrigin:"bottom left"}}><WTree w={104}/><WTree w={62} o={0.85} s={{marginLeft:-18}}/></div>
     <div className="wn-trees wn-right" style={{position:"absolute",right:16,bottom:6,display:"flex",alignItems:"flex-end",transformOrigin:"bottom right"}}><WTree w={56} o={0.85} s={{marginRight:-14}}/><WTree w={88}/></div>
+    <WinterCouple dd={dd}/>
     {flakes.map((f,i)=><div key={i} className="wn-col" style={{left:f.l+"%",animationDuration:f.d+"s",animationDelay:f.dl+"s"}}><i className="wn-flake" style={{width:f.sz,height:f.sz,opacity:f.o,animationDuration:f.sw+"s"}}/></div>)}
   </div>;}
 
@@ -422,19 +499,19 @@ function Dash({data,setData,setTab}){const dd=getDday(data.weddingDate),tot=data
         <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"center"}}><button onClick={()=>confirmReminder(d1Reminders[0].id)} style={{padding:"12px 24px",background:P.btnBg,color:"#fff",border:"none",borderRadius:12,fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:FONT}}>확인했어요</button><button onClick={()=>dismissReminder(d1Reminders[0].id)} style={{padding:"12px 20px",background:P.periLt,color:P.periDk,border:"none",borderRadius:12,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:FONT}}>다시 보지 않기</button></div>
       </div>
     </div>}
-    <div className={P===THEMES.xmas?"dday-winter":""} style={P===THEMES.xmas?{...S.dday,background:"linear-gradient(180deg,#CFE0D5 0%,#E3ECE4 48%,#F7F0DF 100%)"}:S.dday}>{P===THEMES.xmas?<WinterScene/>:<><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/></>}<div style={{position:"relative",zIndex:1}}>
+    <div className={P===THEMES.xmas?"dday-winter":""} style={P===THEMES.xmas?{...S.dday,background:"linear-gradient(180deg,#CFE0D5 0%,#E3ECE4 48%,#F7F0DF 100%)"}:S.dday}>{P===THEMES.xmas?<WinterScene dd={dd}/>:<><Fl1 s={{width:150,top:-30,left:-20}}/><Fl2 s={{width:130,bottom:-15,right:30}}/></>}<div style={{position:"relative",zIndex:1}}>
       {/* Couple heart line art — always visible */}
       <div style={{position:"relative",textAlign:"center"}}>
-        <img src={COUPLE_ART} className="couple-heart-art" alt="" style={{width:"100%",maxWidth:300,margin:"0 auto",display:"block",position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",pointerEvents:"none"}}/>
+        {P!==THEMES.xmas&&<img src={COUPLE_ART} className="couple-heart-art" alt="" style={{width:"100%",maxWidth:300,margin:"0 auto",display:"block",position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",pointerEvents:"none"}}/>}
         {/* Motto text — handwriting font */}
         {data.motto&&<div style={{position:"relative",zIndex:2,paddingTop:8,marginBottom:0}}><div className="motto-text" style={{fontSize:22,color:P.periDk,fontWeight:400,lineHeight:1.6,fontFamily:HW,letterSpacing:0,textShadow:`0 0 24px ${P.peri}35, 0 1px 3px rgba(255,255,255,0.7)`}}>❝ {data.motto} ❞</div></div>}
         {/* Content overlaid inside the heart */}
         <div style={{position:"relative",zIndex:2,paddingTop:data.motto?6:8}}>
           <div style={{fontSize:13,fontWeight:600,color:P===THEMES.xmas?P.blue:P.periDk,letterSpacing:3,marginBottom:10,opacity:P===THEMES.xmas?0.9:0.5}}>{P===THEMES.xmas?"MERRY CHRISTMAS":"OUR WEDDING"}</div>
-          <div className="couple-row" style={{display:"flex",justifyContent:"center",gap:28,marginBottom:12}}><div style={{textAlign:"center"}}><div style={{fontSize:13,color:P.blueDk,fontWeight:600,marginBottom:3}}>신랑</div><div className="couple-name" style={{fontSize:26,fontWeight:700,color:P.periDk,fontFamily:HW}}>{data.groomName}</div></div><div style={{fontSize:24,color:P.lav,alignSelf:"center"}}>♥</div><div style={{textAlign:"center"}}><div style={{fontSize:13,color:P.blueDk,fontWeight:600,marginBottom:3}}>신부</div><div className="couple-name" style={{fontSize:26,fontWeight:700,color:P.periDk,fontFamily:HW}}>{data.brideName}</div></div></div>
+          {(()=>{const core=<><div className="couple-row" style={{display:"flex",justifyContent:"center",gap:28,marginBottom:12}}><div style={{textAlign:"center"}}><div style={{fontSize:13,color:P.blueDk,fontWeight:600,marginBottom:3}}>신랑</div><div className="couple-name" style={{fontSize:26,fontWeight:700,color:P.periDk,fontFamily:HW}}>{data.groomName}</div></div><div style={{fontSize:24,color:P.lav,alignSelf:"center"}}>♥</div><div style={{textAlign:"center"}}><div style={{fontSize:13,color:P.blueDk,fontWeight:600,marginBottom:3}}>신부</div><div className="couple-name" style={{fontSize:26,fontWeight:700,color:P.periDk,fontFamily:HW}}>{data.brideName}</div></div></div>
           <div className="dday-num" style={{fontSize:68,fontWeight:700,color:P.periDk,lineHeight:1,opacity:0.9,fontFamily:HW,letterSpacing:0}}>{dd>0?"D-"+dd:dd===0?"D-Day 🎉":"D+"+Math.abs(dd)}</div>
           <div style={{fontSize:16,color:P.blueDk,marginTop:10,paddingBottom:8}}>{fmtDate(data.weddingDate)} {data.weddingTime}</div>
-          {P===THEMES.xmas&&(()=>{const n=new Date();n.setHours(0,0,0,0);if(n.getMonth()!==11||n.getDate()>25)return null;const left=25-n.getDate();return<div style={{display:"inline-block",marginBottom:6,fontSize:14,fontWeight:600,background:P.lavLt,color:P.lavDk,padding:"5px 12px",borderRadius:20}}>{left===0?"🎄 메리 크리스마스!":"🎄 크리스마스까지 "+left+"일"}</div>;})()}
+          {P===THEMES.xmas&&(()=>{const n=new Date();n.setHours(0,0,0,0);if(n.getMonth()!==11||n.getDate()>25)return null;const left=25-n.getDate();return<div style={{display:"inline-block",marginBottom:6,fontSize:14,fontWeight:600,background:P.lavLt,color:P.lavDk,padding:"5px 12px",borderRadius:20}}>{left===0?"🎄 메리 크리스마스!":"🎄 크리스마스까지 "+left+"일"}</div>;})()}</>;return P===THEMES.xmas?<div className="wn-panel">{core}</div>:core;})()}
         </div>
       </div>
     </div></div>
@@ -1138,7 +1215,20 @@ body[data-theme=xmas] .note-tape::before{background:repeating-linear-gradient(90
 .ph-steps{scrollbar-width:none;}.ph-steps::-webkit-scrollbar{display:none;}
 .ph-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:30px;height:30px;border-radius:15px;border:1px solid ${P.border};background:#fff;color:${P.textSub};font-size:20px;line-height:26px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.06);padding:0;}
 /* Winter scene */
-.dday-winter{padding-top:52px !important;padding-bottom:44px !important;}
+.dday-winter{padding-top:52px !important;padding-bottom:138px !important;}
+.wn-panel{display:inline-block;min-width:300px;padding:16px 34px 14px;border-radius:26px;background:rgba(255,255,255,0.68);border:1.5px solid rgba(255,255,255,0.92);box-shadow:0 6px 22px rgba(90,110,95,0.12);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}
+.wn-couple{position:absolute;bottom:14px;width:170px;transform-origin:50% 100%;transition:transform .6s ease,opacity .6s ease;}
+.wn-cshadow{position:absolute;bottom:8px;width:150px;height:14px;border-radius:50%;background:rgba(120,140,125,0.22);filter:blur(2px);transform-origin:50% 100%;}
+.wn-hands{position:absolute;left:50%;bottom:0;width:min(84%,400px);transform-origin:50% 100%;}
+.wn-bob{animation:wn-bob 1.1s ease-in-out infinite alternate;}
+@keyframes wn-bob{from{transform:translateY(0);}to{transform:translateY(-2.5px);}}
+.wn-legA,.wn-legB{transform-box:fill-box;transform-origin:50% 0;}
+.wn-legA{animation:wn-stepA 1.1s ease-in-out infinite alternate;}.wn-legB{animation:wn-stepB 1.1s ease-in-out infinite alternate;}
+@keyframes wn-stepA{from{transform:rotate(7deg);}to{transform:rotate(-7deg);}}
+@keyframes wn-stepB{from{transform:rotate(-7deg);}to{transform:rotate(7deg);}}
+.wn-heart{transform-box:fill-box;transform-origin:50% 50%;animation:wn-hb 1.1s ease-in-out infinite alternate;}
+@keyframes wn-hb{from{transform:scale(0.85);}to{transform:scale(1.12);}}
+.wn-spark{animation:wn-twinkle 1.2s ease-in-out infinite alternate;}
 .wn-col{position:absolute;top:0;height:100%;width:1px;animation:wn-fall linear infinite;will-change:transform;}
 .wn-flake{position:absolute;bottom:0;left:0;border-radius:50%;background:#fff;box-shadow:0 0 5px rgba(255,255,255,0.9);animation:wn-sway ease-in-out infinite alternate;}
 @keyframes wn-fall{from{transform:translateY(-104%);}to{transform:translateY(6%);}}
@@ -1146,8 +1236,8 @@ body[data-theme=xmas] .note-tape::before{background:repeating-linear-gradient(90
 .wn-bulb{animation:wn-twinkle 2.4s ease-in-out infinite alternate;}
 @keyframes wn-twinkle{from{opacity:0.55;}to{opacity:1;}}
 .wn-star{animation:wn-twinkle 1.8s ease-in-out infinite alternate;}
-@media(max-width:768px){.wn-trees{transform:scale(0.62);left:4px !important;}.wn-trees.wn-right{left:auto !important;right:4px !important;}}
-@media(prefers-reduced-motion:reduce){.wn-col,.wn-flake,.wn-bulb,.wn-star{animation:none !important;}.wn-col{display:none;}}
+@media(max-width:768px){.dday-winter{padding-bottom:118px !important;}.wn-panel{min-width:0;padding:12px 22px 12px;}.wn-couple,.wn-cshadow{--wk:0.8;}.wn-trees{transform:scale(0.62);left:4px !important;}.wn-trees.wn-right{left:auto !important;right:4px !important;}}
+@media(prefers-reduced-motion:reduce){.wn-col,.wn-flake,.wn-bulb,.wn-star,.wn-bob,.wn-legA,.wn-legB,.wn-heart,.wn-spark{animation:none !important;}.wn-col{display:none;}}
 /* Login title */
 .login-title{font-family:${HW} !important;font-weight:700 !important;}
 @media(max-width:768px){.side-nav{display:none !important;}.mob-nav{display:flex !important;}.mob-more{display:block !important;}.main-area{margin-left:0 !important;padding:14px 14px 100px !important;}.sched-grid,.bud-panels,.sdm-grid{grid-template-columns:1fr !important;}.sdm-notes{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}.budget-summary>div{display:flex;justify-content:space-between;align-items:baseline;}.budget-summary{gap:6px !important;}.dday-num{font-size:52px !important;}.couple-name{font-size:21px !important;}.couple-row{gap:14px !important;}.stat-grid,.budget-summary{grid-template-columns:1fr !important;}.budget-main{font-size:24px !important;}.budget-num{font-size:22px !important;}.vendor-grid{grid-template-columns:1fr !important;}.modal-inner{padding:20px 14px !important;margin:6px;border-radius:16px !important;max-height:88vh !important;}.cal-cell{min-height:38px !important;padding:2px !important;}.cal-cell .cal-ev{display:none !important;}.cal-cell .cal-dot{display:flex !important;}.sdm-vendor-btns{flex-wrap:wrap !important;gap:5px !important;}.cl-item-wrap{flex-direction:column !important;align-items:flex-start !important;gap:4px !important;}.budget-detail{flex-wrap:wrap !important;}.contact-card{cursor:pointer;}.couple-heart-art{max-width:220px !important;}.motto-text{font-size:19px !important;}.tab-guide{font-size:14px !important;margin-bottom:12px !important;}.tab-title{font-size:20px !important;}.schedule-form-row{flex-direction:column !important;gap:10px !important;}.schedule-item{flex-direction:column !important;align-items:flex-start !important;gap:8px !important;}.schedule-item-btns{align-self:flex-end !important;}.theme-selector{flex-direction:column !important;gap:8px !important;}.theme-btn{padding:10px 8px !important;}.d1-popup{padding:28px 20px !important;}.d1-popup-dday{font-size:36px !important;}.d1-popup-name{font-size:17px !important;}.tip-text{font-size:15px !important;line-height:1.7 !important;}.note-tape::before{width:40px;height:10px;top:-4px;}}@media(max-width:420px){.chatbot-widget{width:calc(100vw - 24px) !important;right:12px !important;bottom:66px !important;max-height:65vh !important;}.dday-num{font-size:48px !important;}.couple-heart-art{max-width:180px !important;}.motto-text{font-size:16px !important;}.d1-popup{padding:24px 16px !important;}.d1-popup-dday{font-size:30px !important;}}input:focus,select:focus,textarea:focus{border-color:${P.peri} !important;box-shadow:0 0 0 3px rgba(146,173,216,0.15) !important;}button:hover{opacity:0.88;}*{-webkit-font-smoothing:antialiased;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}.cal-dot{display:none;gap:3px;justify-content:center;margin-top:2px;}.chatbot-widget{width:360px;}`;document.head.appendChild(se);
